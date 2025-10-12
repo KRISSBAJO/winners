@@ -40,7 +40,7 @@ const useLazyThree = () => {
 const DoveVisual = () => {
   if (!R3F || !Drei)
     return (
-      <div className="h-64 md:h-80 bg-gradient-to-b from-amber-100 to-red-100 dark:from-red-950/10 dark:to-amber-950/10 rounded-t-[4rem]" />
+      <div className="h-64 md:h-80 bg-gradient-to-b from-amber-100/30 to-red-100/30 dark:from-red-950/5 dark:to-amber-950/5 rounded-t-[4rem]" />
     );
 
   const { Canvas, useFrame } = R3F;
@@ -162,18 +162,18 @@ export default function Hero() {
   return (
     <section
       ref={heroRef}
-      className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-white via-amber-50/50 to-red-50 dark:from-slate-950 dark:via-red-950/10 dark:to-amber-950/20"
+      className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-white via-amber-50/30 to-red-50/20 dark:from-slate-950 dark:via-red-950/5 dark:to-amber-950/10"
     >
       {/* Gradient Layers */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.1),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(139,0,0,0.1),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.08),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(139,0,0,0.08),transparent_70%)]" />
         <div className="absolute inset-0 backdrop-blur-[1px]" />
       </div>
 
       {/* Golden Halo Glow */}
       <div className="absolute inset-0 flex items-center justify-center -z-10">
-        <div className="w-[550px] h-[550px] md:w-[700px] md:h-[700px] rounded-full bg-gradient-radial from-[#D4AF37]/35 via-transparent to-transparent blur-3xl animate-pulse" />
+        <div className="w-[550px] h-[550px] md:w-[700px] md:h-[700px] rounded-full bg-gradient-radial from-[#D4AF37]/25 via-transparent to-transparent blur-3xl animate-pulse" />
       </div>
 
       {/* Text */}
@@ -184,7 +184,7 @@ export default function Hero() {
         animate={heroInView ? "visible" : "hidden"}
       >
         <motion.h1
-          className="text-5xl md:text-7xl lg:text-8xl font-serif font-light tracking-tight leading-tight text-slate-900 dark:text-white drop-shadow-lg"
+          className="text-5xl md:text-7xl lg:text-8xl font-serif font-light tracking-tight leading-tight text-slate-900 dark:text-slate-50 drop-shadow-md"
           aria-label={headline}
         >
           {headlineWords.map((word, i) => (
@@ -199,7 +199,7 @@ export default function Hero() {
         </motion.h1>
 
         <motion.p
-          className="mt-10 mx-auto max-w-2xl text-lg md:text-xl text-slate-700 dark:text-slate-300 leading-relaxed font-normal"
+          className="mt-10 mx-auto max-w-2xl text-lg md:text-xl text-slate-800 dark:text-slate-200 leading-relaxed font-normal drop-shadow-sm"
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1 }}
@@ -219,14 +219,14 @@ export default function Hero() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
-            className="px-8 py-4 rounded-full bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white font-medium shadow-lg hover:shadow-amber-500/30 transition-all flex items-center gap-2"
+            className="px-8 py-4 rounded-full bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white font-medium shadow-lg hover:shadow-amber-500/30 transition-all flex items-center gap-2 drop-shadow-md"
           >
             Get Connected <ArrowRight className="w-4 h-4" />
           </motion.button>
 
           <motion.button
             whileHover={{ scale: 1.03 }}
-            className="px-8 py-4 rounded-full border border-slate-400/30 hover:border-slate-600/50 text-slate-800 dark:text-slate-200 backdrop-blur-sm transition-all"
+            className="px-8 py-4 rounded-full border border-slate-400/30 hover:border-slate-600/50 text-slate-800 dark:text-slate-200 backdrop-blur-sm transition-all drop-shadow-sm"
           >
             Learn More
           </motion.button>
@@ -240,4 +240,3 @@ export default function Hero() {
     </section>
   );
 }
-   
