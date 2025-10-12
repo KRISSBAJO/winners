@@ -1,17 +1,9 @@
-import {
-
-  ChevronLeft,
-  LogOut,
-  ChevronDown,
-  ChevronRight as ChevronRightIcon,
-  UserCircle2,
-
-} from "lucide-react";
+// Sidebar.tsx
+import { ChevronLeft, ChevronRight as ChevronRightIcon, ChevronDown, UserCircle2, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../api/features/auth/store/useAuthStore";
-
 import { roleBasedNav } from "./roleBasedNav";
 
 type NavItem = {
@@ -25,40 +17,26 @@ type NavItem = {
 type SidebarProps = {
   collapsed: boolean;
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
-  pinned?: boolean;
-  setPinned?: React.Dispatch<React.SetStateAction<boolean>>;
+  isMobileOpen?: boolean;               // NEW
+  onMobileClose?: () => void;           // NEW
 };
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
-    },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
 };
-
-const itemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { opacity: 1, x: 0 },
-};
-
+const itemVariants = { hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0 } };
 const submenuVariants = {
-  open: {
-    height: "auto",
-    opacity: 1,
-    transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
-  },
-  closed: {
-    height: 0,
-    opacity: 0,
-    transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] },
-  },
+  open: { height: "auto", opacity: 1, transition: { duration: 0.3 } },
+  closed: { height: 0, opacity: 0, transition: { duration: 0.2 } },
 };
 
-export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
+export default function Sidebar({
+  collapsed,
+  setCollapsed,
+  isMobileOpen = false,
+  onMobileClose,
+}: SidebarProps) {
   const [hovered, setHovered] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [menuOpen, setMenuOpen] = useState(false);
@@ -68,286 +46,266 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const isCollapsed = collapsed && !hovered;
   const navItems = roleBasedNav[user?.role || "volunteer"] as NavItem[];
 
-  const toggleGroup = (groupName: string) => {
-    setOpenGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
+  // Close drawer on route click (mobile)
+  const handleNavClick = () => {
+    if (onMobileClose) onMobileClose();
   };
 
-  const handleLogout = () => {
-    clearAuth();
-    navigate("/login");
-  };
+  // Press ESC to close drawer (mobile)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isMobileOpen && onMobileClose) onMobileClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isMobileOpen, onMobileClose]);
+
+  // Desktop width animation; Mobile uses translateX slide-in
+  const desktopWidth = isCollapsed ? 72 : 280;
 
   return (
-    <motion.aside
-      layout
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      animate={{ width: isCollapsed ? 80 : 280 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="relative z-50 h-screen bg-gradient-to-b from-white/95 via-white/80 to-slate-100/70 dark:from-slate-900/95 dark:via-slate-800/80 dark:to-slate-700/70 backdrop-blur-3xl border-r border-gradient-to-b from-slate-200/50 to-slate-300/30 dark:from-slate-700/50 dark:to-slate-600/30 flex flex-col shadow-2xl shadow-slate-200/50 dark:shadow-slate-900/50 overflow-hidden"
+    <>
+      {/* Desktop rail (md and up) */}
+      <motion.aside
+        layout
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        animate={{ width: desktopWidth }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="hidden md:flex z-30 h-dvh bg-gradient-to-b from-white/95 via-white/80 to-slate-100/70
+                   dark:from-slate-900/95 dark:via-slate-800/80 dark:to-slate-700/70 backdrop-blur-3xl
+                   border-r border-slate-200/50 dark:border-slate-700/40 flex-col shadow-2xl overflow-hidden"
+        style={{ width: desktopWidth }}
+      >
+        <Header isCollapsed={isCollapsed} />
+        <Nav
+          items={navItems}
+          isCollapsed={isCollapsed}
+          openGroups={openGroups}
+          setOpenGroups={setOpenGroups}
+          onItemClick={handleNavClick}
+        />
+        <Profile
+          isCollapsed={isCollapsed}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          onLogout={() => {
+            clearAuth();
+            navigate("/login");
+          }}
+        />
+        <CollapseButton collapsed={collapsed} setCollapsed={setCollapsed} />
+      </motion.aside>
+
+      {/* Mobile drawer (below md) */}
+      <motion.aside
+        initial={false}
+        animate={{ x: isMobileOpen ? 0 : -320 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="md:hidden fixed left-0 top-0 z-50 h-dvh w-72 bg-gradient-to-b from-white via-white/95 to-slate-100/80
+                   dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-800/80 backdrop-blur-2xl
+                   border-r border-slate-200/60 dark:border-slate-700/60 shadow-2xl overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+      >
+        <Header isCollapsed={false} />
+        <Nav
+          items={navItems}
+          isCollapsed={false}
+          openGroups={openGroups}
+          setOpenGroups={setOpenGroups}
+          onItemClick={handleNavClick}
+        />
+        <Profile
+          isCollapsed={false}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          onLogout={() => {
+            clearAuth();
+            navigate("/login");
+          }}
+        />
+      </motion.aside>
+    </>
+  );
+}
+
+/* --- Extracted pieces to keep file tidy --- */
+
+function Header({ isCollapsed }: { isCollapsed: boolean }) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-4 border-b border-slate-200/40 dark:border-slate-700/40 relative">
+      <Link
+        to="/"
+        className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B0000] via-[#A52A2A] to-[#D4AF37] flex items-center justify-center text-white font-bold shadow-lg"
+      >
+        DC
+      </Link>
+      {!isCollapsed && (
+        <h1 className="text-xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent whitespace-nowrap tracking-tight">
+          Connect Hub
+        </h1>
+      )}
+    </div>
+  );
+}
+
+function Nav({
+  items,
+  isCollapsed,
+  openGroups,
+  setOpenGroups,
+  onItemClick,
+}: {
+  items: NavItem[];
+  isCollapsed: boolean;
+  openGroups: Record<string, boolean>;
+  setOpenGroups: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  onItemClick: () => void;
+}) {
+  const toggleGroup = (name: string) =>
+    setOpenGroups((p) => ({ ...p, [name]: !p[name] }));
+
+  return (
+    <motion.nav
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex-1 p-2 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600"
     >
-      {/* --- Header / Logo (Animated Glow) --- */}
-      <motion.div 
-        layout
-        className="flex items-center gap-3 px-4 py-4 border-b border-slate-200/40 dark:border-slate-700/40 relative overflow-hidden"
-      >
-        <motion.div
-          className="relative"
-          whileHover={{ scale: 1.05 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
-          <Link to='/' className="w-10 h-10 rounded-xl bg-gradient-to-br cursor-pointer from-[#8B0000] via-[#A52A2A] to-[#D4AF37] flex items-center justify-center text-white font-bold shadow-lg shadow-red-500/20">
-            DC
-          </Link>
-          <motion.div
-            className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#8B0000]/20 to-[#D4AF37]/20 blur-xl"
-            animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </motion.div>
-        <AnimatePresence>
-          {!isCollapsed && (
-            <motion.h1
-              layout
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="text-xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent whitespace-nowrap tracking-tight"
+      {items.map((item) => (
+        <div key={item.name} className="space-y-0.5">
+          {item.type === "link" ? (
+            <NavLink
+              to={item.to!}
+              onClick={onItemClick}
+              className={({ isActive }) =>
+                `group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-300 overflow-hidden ${
+                  isActive
+                    ? "bg-gradient-to-r from-[#8B0000]/20 to-[#D4AF37]/20 text-[#8B0000] dark:text-[#D4AF37]"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-gradient-to-r hover:from-slate-100/50 hover:to-slate-200/50 dark:hover:from-slate-700/50 dark:hover:to-slate-600/50"
+                } ${isCollapsed ? "justify-center" : ""}`
+              }
             >
-              Connect Hub
-            </motion.h1>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* --- Navigation (Staggered, Grouped with Smooth Submenus) --- */}
-      <motion.nav 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="flex-1 p-2 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600"
-      >
-        {navItems.map((item, index) => (
-          <div key={item.name} className="space-y-0.5">
-            {item.type === "link" ? (
-              <NavLink
-                to={item.to!}
-                className={({ isActive }) =>
-                  `group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition-all duration-300 overflow-hidden ${
-                    isActive
-                      ? "bg-gradient-to-r from-[#8B0000]/20 to-[#D4AF37]/20 text-[#8B0000] dark:text-[#D4AF37] shadow-inner shadow-red-500/10"
-                      : "text-slate-600 dark:text-slate-300 hover:bg-gradient-to-r hover:from-slate-100/50 hover:to-slate-200/50 dark:hover:from-slate-700/50 dark:hover:to-slate-600/50"
-                  } ${isCollapsed ? "justify-center" : ""}`
-                }
+              <item.icon className="w-5 h-5" />
+              {!isCollapsed && <span className="flex-1 min-w-0">{item.name}</span>}
+            </NavLink>
+          ) : (
+            <>
+              <button
+                onClick={() => toggleGroup(item.name)}
+                className="group relative flex items-center justify-between w-full gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-left transition-all duration-300 hover:bg-gradient-to-r hover:from-slate-100/50 hover:to-slate-200/50 dark:hover:from-slate-700/50 dark:hover:to-slate-600/50"
               >
-                <motion.div 
-                  layout 
-                  className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <item.icon className="w-5 h-5 transition-colors group-hover:text-[#8B0000] dark:group-hover:text-[#D4AF37]" />
-                </motion.div>
-                {!isCollapsed && (
-                  <motion.span 
-                    layout 
-                    initial={{ opacity: 0, x: -10 }} 
-                    animate={{ opacity: 1, x: 0 }} 
-                    className="flex-1 min-w-0"
+                <div className="flex items-center gap-3 flex-1">
+                  <item.icon className="w-5 h-5" />
+                  {!isCollapsed && <span className="flex-1 min-w-0">{item.name}</span>}
+                </div>
+                {!isCollapsed && <ChevronDown className="w-4 h-4 opacity-70" />}
+              </button>
+              <AnimatePresence>
+                {openGroups[item.name] && !isCollapsed && (
+                  <motion.ul
+                    variants={submenuVariants}
+                    initial="closed"
+                    animate="open"
+                    exit="closed"
+                    className="space-y-1 overflow-hidden ml-6"
                   >
-                    {item.name}
-                  </motion.span>
-                )}
-                {/* Active Indicator */}
-                <AnimatePresence>
-                  {isCollapsed ? null : (
-                    <motion.div
-                      className="absolute right-3 w-1 h-4 bg-gradient-to-b from-[#8B0000] to-[#D4AF37] rounded"
-                      initial={{ opacity: 0, scaleY: 0 }}
-                      animate={{ opacity: 1, scaleY: 1 }}
-                      exit={{ opacity: 0, scaleY: 0 }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  )}
-                </AnimatePresence>
-              </NavLink>
-            ) : (
-              <>
-                {/* Group Header */}
-                <motion.button
-                  onClick={() => toggleGroup(item.name)}
-                  className="group relative flex items-center justify-between w-full gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-left transition-all duration-300 hover:bg-gradient-to-r hover:from-slate-100/50 hover:to-slate-200/50 dark:hover:from-slate-700/50 dark:hover:to-slate-600/50"
-                  whileHover={{ x: 2 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <motion.div 
-                      layout 
-                      className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg bg-gradient-to-br from-slate-100/50 to-slate-200/50 dark:from-slate-700/50 dark:to-slate-600/50 group-hover:bg-gradient-to-br group-hover:from-[#8B0000]/10 group-hover:to-[#D4AF37]/10"
-                    >
-                      <item.icon className="w-5 h-5 text-slate-600 dark:text-slate-300 group-hover:text-[#8B0000] dark:group-hover:text-[#D4AF37]" />
-                    </motion.div>
-                    {!isCollapsed && (
-                      <motion.span layout className="flex-1 min-w-0">
-                        {item.name}
-                      </motion.span>
-                    )}
-                  </div>
-                  <motion.div
-                    animate={{ rotate: openGroups[item.name] ? 180 : 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="flex-shrink-0 w-5 h-5 text-slate-400 group-hover:text-[#8B0000] dark:group-hover:text-[#D4AF37]"
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.div>
-                </motion.button>
-
-                {/* Submenu */}
-                <AnimatePresence>
-                  {openGroups[item.name] && !isCollapsed && (
-                    <motion.ul
-                      layout
-                      variants={submenuVariants}
-                      initial="closed"
-                      animate="open"
-                      exit="closed"
-                      className="space-y-1 overflow-hidden ml-0 pl-0"
-                    >
-                      {item.children?.map((child, childIndex) => (
-                        <motion.li
-                          key={child.name}
-                          variants={itemVariants}
-                          className="ml-6"
+                    {item.children?.map((child) => (
+                      <li key={child.name}>
+                        <NavLink
+                          to={child.to!}
+                          onClick={onItemClick}
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-medium transition-all ${
+                              isActive
+                                ? "bg-gradient-to-r from-[#8B0000]/10 to-[#D4AF37]/10 text-[#8B0000] dark:text-[#D4AF37]"
+                                : "text-slate-500 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:hover:text-slate-200"
+                            }`
+                          }
                         >
-                          <NavLink
-                            to={child.to!}
-                            className={({ isActive }) =>
-                              `group/sub flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-medium transition-all duration-200 ${
-                                isActive
-                                  ? "bg-gradient-to-r from-[#8B0000]/10 to-[#D4AF37]/10 text-[#8B0000] dark:text-[#D4AF37]"
-                                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:hover:text-slate-200"
-                              }`
-                            }
-                          >
-                            <child.icon className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{child.name}</span>
-                            <motion.div
-                              className="ml-auto w-1 h-3 bg-gradient-to-b from-[#8B0000] to-[#D4AF37] rounded opacity-0 group-hover/sub:opacity-100"
-                              initial={{ scaleX: 0 }}
-                              whileHover={{ scaleX: 1 }}
-                              transition={{ duration: 0.2 }}
-                            />
-                          </NavLink>
-                        </motion.li>
-                      ))}
-                    </motion.ul>
-                  )}
-                </AnimatePresence>
-              </>
-            )}
+                          <child.icon className="w-4 h-4" />
+                          <span className="truncate">{child.name}</span>
+                        </NavLink>
+                      </li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+        </div>
+      ))}
+    </motion.nav>
+  );
+}
+
+function Profile({
+  isCollapsed,
+  menuOpen,
+  setMenuOpen,
+  onLogout,
+}: {
+  isCollapsed: boolean;
+  menuOpen: boolean;
+  setMenuOpen: (v: boolean) => void;
+  onLogout: () => void;
+}) {
+  return (
+    <div className="relative border-t border-slate-200/40 dark:border-slate-700/40 px-3 py-4 bg-gradient-to-b from-transparent to-slate-50/30 dark:to-slate-800/30">
+      <div
+        className="flex items-center gap-3 cursor-pointer select-none relative"
+        onClick={() => setMenuOpen(!menuOpen)}
+      >
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8B0000] via-[#A52A2A] to-[#D4AF37] flex items-center justify-center text-white font-semibold">
+          {/* initial */}
+        </div>
+        {!isCollapsed && (
+          <div className="flex-1 min-w-0 space-y-0.5">
+            <p className="text-sm font-semibold">Profile</p>
+            <p className="text-xs text-slate-500">Settings & sign out</p>
           </div>
-        ))}
-      </motion.nav>
+        )}
+      </div>
 
-      {/* --- Profile Section (Enhanced Glassy Dropdown) --- */}
-      <motion.div 
-        layout
-        className="relative border-t border-slate-200/40 dark:border-slate-700/40 px-3 py-4 bg-gradient-to-b from-transparent to-slate-50/30 dark:to-slate-800/30"
-      >
-        <motion.div
-          layout
-          className="flex items-center gap-3 cursor-pointer select-none relative"
-          onClick={() => setMenuOpen((p) => !p)}
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 400 }}
-        >
+      <AnimatePresence>
+        {menuOpen && !isCollapsed && (
           <motion.div
-            className="relative w-10 h-10 rounded-full bg-gradient-to-br from-[#8B0000] via-[#A52A2A] to-[#D4AF37] flex items-center justify-center text-white font-semibold shadow-lg shadow-red-500/20 overflow-hidden"
-            whileHover={{ scale: 1.05 }}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            className="absolute bottom-16 left-3 right-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden"
           >
-            <span className="relative z-10">{user?.firstName?.[0] || "U"}</span>
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            />
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-3 px-4 py-3 text-sm w-full hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400"
+            >
+              <LogOut size={18} />
+              Sign Out
+            </button>
           </motion.div>
-          {!isCollapsed && (
-            <div className="flex-1 min-w-0 space-y-0.5">
-              <p className="text-sm font-semibold text-slate-800 dark:text-white truncate bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-slate-500 truncate">{user?.role || "User"}</p>
-            </div>
-          )}
-          {!isCollapsed && (
-            <motion.div
-              animate={{ rotate: menuOpen ? 180 : 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <ChevronDown size={16} className="text-slate-400" />
-            </motion.div>
-          )}
-        </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
-        <AnimatePresence>
-          {menuOpen && !isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="absolute bottom-16 left-0 right-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-2xl shadow-slate-200/30 dark:shadow-slate-900/30 overflow-hidden"
-            >
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: "auto" }}
-                className="overflow-hidden"
-              >
-                <button
-                  onClick={() => navigate("/dashboard/profile")}
-                  className="flex items-center gap-3 px-4 py-3 text-sm w-full hover:bg-gradient-to-r hover:from-slate-50 hover:to-slate-100 dark:hover:from-slate-700/50 dark:hover:to-slate-600/50 text-slate-700 dark:text-slate-200 transition-all duration-200 font-medium"
-                >
-                  <UserCircle2 size={18} className="flex-shrink-0 text-slate-500" />
-                  View Profile
-                  <div className="ml-auto w-2 h-2 bg-green-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-3 text-sm w-full hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100 dark:hover:from-red-900/20 dark:hover:to-red-800/20 text-red-600 dark:text-red-400 transition-all duration-200 font-medium"
-                >
-                  <LogOut size={18} className="flex-shrink-0" />
-                  Sign Out
-                  <motion.div
-                    className="ml-auto w-1 h-4 bg-gradient-to-b from-red-500 to-red-600 rounded opacity-0"
-                    initial={{ scaleY: 0 }}
-                    whileHover={{ scaleY: 1, opacity: 1 }}
-                    transition={{ duration: 0.2 }}
-                  />
-                </button>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* --- Collapse Toggle (Floating Orb) --- */}
-      <motion.button
-        layout
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-br from-slate-100/80 to-slate-200/80 dark:from-slate-700/80 dark:to-slate-600/80 border-2 border-slate-300/50 dark:border-slate-600/50 rounded-full p-2.5 hover:from-slate-200/90 hover:to-slate-300/90 dark:hover:from-slate-600/90 dark:hover:to-slate-500/90 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300"
-        whileHover={{ scale: 1.1, rotate: 180 }}
-        whileTap={{ scale: 0.95 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-      >
-        <motion.div
-          animate={{ rotate: collapsed ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {collapsed ? <ChevronRightIcon size={16} className="text-slate-600 dark:text-slate-300" /> : <ChevronLeft size={16} className="text-slate-600 dark:text-slate-300" />}
-        </motion.div>
-      </motion.button>
-    </motion.aside>
+function CollapseButton({
+  collapsed,
+  setCollapsed,
+}: {
+  collapsed: boolean;
+  setCollapsed: (v: boolean) => void;
+}) {
+  return (
+    <button
+      onClick={() => setCollapsed(!collapsed)}
+      className="absolute -right-2 top-1/2 -translate-y-1/2 hidden md:flex items-center justify-center
+                 bg-white/80 dark:bg-slate-700/80 border-2 border-slate-300/50 dark:border-slate-600/50
+                 rounded-full p-2.5 shadow-lg hover:shadow-xl transition"
+      aria-label="Toggle collapse"
+    >
+      {collapsed ? <ChevronRightIcon size={16} /> : <ChevronLeft size={16} />}
+    </button>
   );
 }

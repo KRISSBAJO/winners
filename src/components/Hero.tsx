@@ -32,7 +32,7 @@ export default function Hero() {
   return (
     <section
       ref={heroRef}
-      className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-white dark:bg-slate-950"
+      className="relative flex flex-col items-center justify-center min-h-[85vh] overflow-hidden bg-white dark:bg-slate-950"
     >
       {/* Text */}
       <motion.div
