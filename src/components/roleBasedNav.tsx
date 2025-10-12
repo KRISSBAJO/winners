@@ -1,0 +1,183 @@
+import {
+  LayoutDashboard,
+  Users,
+  UserPlus,
+  BarChart3,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  ChevronDown,
+  ChevronUp,
+  ChevronRight as ChevronRightIcon,
+  Building2,
+  Calendar,
+  Activity,
+  FileText,
+  Bell,
+  UserCircle2,
+  Globe,
+  MapPin,
+  Users2,
+  Zap,
+} from "lucide-react";
+
+
+export const roleBasedNav = {
+  siteAdmin: [
+    { 
+      name: "Dashboard", 
+      icon: LayoutDashboard, 
+      to: "/dashboard",
+      type: "link" as const 
+    },
+    { 
+      name: "Management", 
+      icon: Users, 
+      type: "group" as const,
+      children: [
+        { name: "Users", icon: Users, to: "/dashboard/users" },
+        { name: "Membership", icon: Users2, to: "/dashboard/membership-management" },
+        { name: "Self-Registration", icon: UserPlus, to: "/dashboard/members/self-register-invite" },
+        { name: "Attendance", icon: BarChart3, to: "/dashboard/attendance" },
+        { name: "Roles", icon: Activity, to: "/dashboard/roles" },
+        { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
+      ]
+    },
+    { 
+      name: "Organization", 
+      icon: Building2, 
+      type: "group" as const,
+      children: [
+        { name: "National Churches", icon: Globe, to: "/dashboard/national-churches" },
+        { name: "Districts", icon: MapPin, to: "/dashboard/districts" },
+        { name: "Churches", icon: Building2, to: "/dashboard/churches" },
+      ]
+    },
+    { 
+      name: "Resources", 
+      icon: Zap, 
+      type: "group" as const,
+      children: [
+        { name: "Volunteers", icon: UserPlus, to: "/dashboard/volunteers" },
+        { name: "Events", icon: Calendar, to: "/dashboard/events" },
+        { name: "Reports", icon: FileText, to: "/dashboard/analytics/attendance" },
+      ]
+    },
+    { 
+      name: "Settings", 
+      icon: Settings, 
+      to: "/dashboard/change-password",
+      type: "link" as const 
+    },
+
+  ],
+  nationalPastor: [
+    { 
+      name: "Dashboard", 
+      icon: LayoutDashboard, 
+      to: "/dashboard",
+      type: "link" as const 
+    },
+    { 
+      name: "Management", 
+      icon: Users, 
+      type: "group" as const,
+      children: [
+        { name: "Districts", icon: MapPin, to: "/dashboard/districts" },
+        { name: "Reports", icon: BarChart3, to: "/dashboard/reports" },
+        { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
+      ]
+    },
+
+    {
+      name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const
+    }
+  ],
+  districtPastor: [
+    { 
+      name: "Dashboard", 
+      icon: LayoutDashboard, 
+      to: "/dashboard",
+      type: "link" as const 
+    },
+    { 
+      name: "Management", 
+      icon: Users, 
+      type: "group" as const,
+      children: [
+        { name: "Churches", icon: Building2, to: "/dashboard/churches" },
+        { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
+      ]
+    },
+
+    {
+      name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const
+    }
+  ],
+  churchAdmin: [
+    { 
+      name: "Dashboard", 
+      icon: LayoutDashboard, 
+      to: "/dashboard",
+      type: "link" as const 
+    },
+     { 
+      name: "Management", 
+      icon: Users, 
+      type: "group" as const,
+      children: [
+        { name: "Users", icon: Users, to: "/dashboard/users" },
+        { name: "Membership", icon: Users2, to: "/dashboard/membership-management" },
+        { name: "Attendance", icon: BarChart3, to: "/dashboard/attendance" },
+        { name: "Roles", icon: Activity, to: "/dashboard/roles" },
+        { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
+      ]
+    },
+     { 
+      name: "Resources", 
+      icon: Zap, 
+      type: "group" as const,
+      children: [
+        { name: "Volunteers", icon: UserPlus, to: "/dashboard/volunteers" },
+        { name: "Events", icon: Calendar, to: "/dashboard/events" },
+        { name: "Reports", icon: FileText, to: "/dashboard/analytics/attendance" },
+      ]
+    },
+    { 
+      name: "Settings", 
+      icon: Settings, 
+      to: "/dashboard/change-password",
+      type: "link" as const 
+    },
+  ],
+  pastor: [
+    { 
+      name: "Dashboard", 
+      icon: LayoutDashboard, 
+      to: "/dashboard",
+      type: "link" as const 
+    },
+    { 
+      name: "Members", 
+      icon: Users, 
+      to: "/dashboard/members",
+      type: "link" as const 
+    },
+  ],
+  volunteer: [
+    { 
+      name: "Dashboard", 
+      icon: LayoutDashboard, 
+      to: "/dashboard",
+      type: "link" as const 
+    },
+    {
+      name: "Pastors", icon: UserPlus, to: "/dashboard/pastors", type: "link" as const
+    },
+
+    {
+      name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const
+    }
+  ],
+};
