@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, LogOut, LayoutDashboard, User as UserIcon, ChevronDown } from "lucide-react";
 import { useAuth } from "../api/features/auth/hooks/useAuth";
+import Logo from "../assets/images/logo1.png";
 
 const BRAND_RED = "#8B0000";
 const BRAND_GOLD = "#D4AF37";
@@ -29,7 +30,7 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 italic ${
         scrolled
           ? "backdrop-blur-xl bg-white/70 dark:bg-slate-900/70 shadow-lg border-b border-slate-200/60 dark:border-slate-700"
           : "bg-transparent"
@@ -44,9 +45,9 @@ export default function Header() {
         >
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-800 to-yellow-500 group-hover:scale-105 transition-transform" />
-            <span className="text-xl font-extrabold text-slate-800 dark:text-white">
-              Dominion Connect
+            <img src={Logo} alt="Logo" className="h-9 w-9 rounded-lg object-cover " />
+            <span className="text-xl font-extrabold text-slate-800 dark:text-white italic select-none group-hover:underline decoration-2 decoration-amber-400/70">
+           
             </span>
           </a>
 
@@ -73,7 +74,7 @@ export default function Header() {
             {!isAuthenticated ? (
               <a
                 href="/login"
-                className="hidden md:inline-flex items-center justify-center rounded-xl px-5 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                className="hidden md:inline-flex items-center justify-center rounded-xl px-5 py-2 text-sm font-semibold italic text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 style={{
                   background: `linear-gradient(135deg, ${BRAND_RED}, ${BRAND_GOLD})`,
                 }}
@@ -108,7 +109,7 @@ export default function Header() {
                     >
                       <a
                         href="/dashboard"
-                        className="flex items-center gap-2 px-4 py-3 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                        className="flex items-center gap-2 px-4 py-3 text-sm italic text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                       >
                         <LayoutDashboard size={16} />
                         Dashboard

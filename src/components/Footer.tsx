@@ -2,6 +2,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { Facebook, Instagram, Youtube, Mail, MapPin, CheckCircle, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Logo from "../assets/images/logo1.png";
 
 const emailSchema = z.string().email("Please enter a valid email address");
 
@@ -240,12 +241,10 @@ export default function Footer() {
         >
           <div className="flex items-center gap-2">
             <div
-              className="h-8 w-8 rounded-lg flex items-center justify-center shadow-md"
-               style={{
-                  background: `linear-gradient(135deg, ${BRAND_RED}, ${BRAND_GOLD})`,
-                }}
+              className="h-8 w-8 rounded-lg flex items-center justify-center "
+              
             >
-              <span className="text-white font-bold text-sm">DC</span>
+              <img src={Logo} alt="Logo" className="h-6 w-6 rounded-lg object-cover " />
             </div>
             <span className="font-semibold text-deepBlue">
               Dominion Connect
