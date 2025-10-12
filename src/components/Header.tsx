@@ -46,7 +46,7 @@ export default function Header() {
           <a href="/" className="flex items-center gap-2 group">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-800 to-yellow-500 group-hover:scale-105 transition-transform" />
             <span className="text-xl font-extrabold text-slate-800 dark:text-white">
-              Winners<span className="text-[#D4AF37]">'</span> Connect
+              Dominion Connect
             </span>
           </a>
 
