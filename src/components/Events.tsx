@@ -1,202 +1,290 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { CalendarDays, Sparkles, ArrowRightCircle, Users, Clock } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import {
+  CalendarDays,
+  MapPin,
+  Video,
+  Users,
+  Clock,
+  Sparkles,
+  ArrowRightCircle,
+  CalendarPlus,
+} from "lucide-react";
 import { Link } from "react-router-dom";
-import { usePublicEvents } from "../api/features/events/hooks/useEvents"; // adjust path if needed
+import { usePublicEvents } from "../api/features/events/hooks/useEvents";
 
-const FMT = new Intl.DateTimeFormat(undefined, {
+/* ----------------------------- tiny utilities ----------------------------- */
+const FMT_DAY = new Intl.DateTimeFormat(undefined, {
+  weekday: "short",
+  month: "short",
+  day: "2-digit",
+});
+const FMT_FULL = new Intl.DateTimeFormat(undefined, {
   month: "short",
   day: "2-digit",
   year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
 });
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
 
+function timeRange(startISO?: string, endISO?: string) {
+  if (!startISO) return "TBA";
+  const s = new Date(startISO);
+  if (!endISO) return FMT_FULL.format(s);
+  const e = new Date(endISO);
+  if (isSameDay(s, e)) {
+    return `${FMT_DAY.format(s)} • ${s.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })} – ${e.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  }
+  return `${FMT_FULL.format(s)} – ${FMT_FULL.format(e)}`;
+}
+
+function googleCalLink(ev: {
+  title?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  location?: string;
+}) {
+  if (!ev.startDate) return "#";
+  const s = new Date(ev.startDate).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const e = ev.endDate
+    ? new Date(ev.endDate).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
+    : s;
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: ev.title || "Event",
+    dates: `${s}/${e}`,
+    details: ev.description || "",
+    location: ev.location || "",
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+/* --------------------------------- view ---------------------------------- */
 export default function Events() {
-  // grab only three upcoming (sorted by startDate). Add extra filters later as needed.
+  const reduce = useReducedMotion();
   const { data, isLoading, isError, refetch } = usePublicEvents({
     limit: 3,
     page: 1,
-    sort: "startDate", // earliest first; change to "-startDate" for latest first
-    // type: "Service", // optional filter
-    // q: "",          // optional search
+    sort: "startDate",
   });
-
   const events = data?.items ?? [];
 
   return (
-    <section className="relative py-32 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-red-950/20">
-      {/* Subtle Background Elements */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-100/20 dark:bg-red-900/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] bg-amber-100/10 dark:bg-amber-900/5 rounded-full blur-3xl" />
+    <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-red-950/20 py-20 sm:py-28">
+      {/* bg accents */}
+      <div aria-hidden className="absolute inset-0 -z-10">
+        <div className="absolute top-1/4 left-[8%] w-64 sm:w-80 h-64 sm:h-80 bg-red-100/25 dark:bg-red-900/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/5 right-[6%] w-[22rem] h-[22rem] sm:w-[28rem] sm:h-[28rem] bg-amber-100/15 dark:bg-amber-900/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Header */}
-      <div className="text-center mb-20 relative z-10">
+      {/* header */}
+      <div className="text-center mb-12 sm:mb-16">
         <motion.div
-          className="inline-flex items-center gap-3 mb-4"
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduce ? false : { opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="inline-flex items-center gap-3"
         >
-          <Sparkles className="w-8 h-8 text-amber-500 animate-pulse" />
-          <h2 className="text-5xl md:text-6xl font-serif text-slate-900 dark:text-white drop-shadow-sm font-light">
+          <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-amber-500" />
+          <h2 className="font-serif font-light text-[clamp(2rem,5vw,3.5rem)] text-slate-900 dark:text-white tracking-tight">
             Upcoming Events
           </h2>
         </motion.div>
         <motion.p
-          className="mt-4 text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed"
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduce ? false : { opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          className="mt-4 max-w-2xl mx-auto text-[15px] sm:text-lg text-slate-600 dark:text-slate-300"
         >
-          Stay connected to what God is doing through our upcoming services and gatherings.
+          Stay connected to what God is doing through our services, trainings, and gatherings.
         </motion.p>
       </div>
 
-      {/* States */}
+      {/* states */}
       {isLoading && <SkeletonTimeline />}
       {isError && (
         <div className="max-w-5xl mx-auto px-6">
-          <motion.div
-            className="rounded-3xl p-8 border bg-white/80 dark:bg-slate-900/70 flex items-center justify-between"
-            initial={{ scale: 0.95, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="rounded-3xl p-6 sm:p-8 border bg-white/80 dark:bg-slate-900/70 flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
             <p className="text-sm text-slate-600 dark:text-slate-300">
               Couldn’t load events. Please try again.
             </p>
-            <motion.button
+            <button
               onClick={() => refetch()}
-              whileHover={{ scale: 1.05 }}
-              className="px-4 py-2 text-sm rounded-xl border bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white hover:shadow-lg transition-all"
+              className="px-4 py-2 text-sm rounded-xl bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white shadow hover:brightness-105"
             >
               Retry
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         </div>
       )}
 
+      {/* list */}
       {!isLoading && events.length > 0 && (
-        <div className="relative max-w-5xl mx-auto px-6">
-          {/* Vertical Line */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-[4px] bg-gradient-to-b from-[#8B0000]/40 via-[#D4AF37]/60 to-[#8B0000]/20 rounded-full shadow-md" />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+          {/* center line */}
+          <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[4px] bg-gradient-to-b from-[#8B0000]/40 via-[#D4AF37]/60 to-[#8B0000]/20 rounded-full" />
 
-          <div className="space-y-28">
+          <div className="space-y-14 sm:space-y-20">
             {events.map((ev: any, i: number) => {
               const img =
                 ev.coverImageUrl ||
                 ev.coverUrl ||
                 ev.cover?.url ||
                 "https://images.unsplash.com/photo-1520975922323-7da4b2d42e1a?auto=format&fit=crop&w=1200&q=60";
-              const date = ev.startDate ? FMT.format(new Date(ev.startDate)) : "—";
               const title = ev.title ?? "Untitled";
-              const desc = ev.description ?? "";
+              const when = timeRange(ev.startDate, ev.endDate);
+              const where = ev.isOnline
+                ? "Online"
+                : ev.location || ev.venue || ev.address || "On-site";
+              const chipColor =
+                ev.type === "Service"
+                  ? "from-emerald-500 to-teal-500"
+                  : ev.type === "Training"
+                  ? "from-indigo-500 to-blue-500"
+                  : "from-amber-500 to-rose-500";
 
-              return (
-                <motion.div
-                  key={ev._id || i}
-                  className={`relative flex flex-col md:flex-row items-center ${
-                    i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-                  } gap-12`}
-                  initial={{ opacity: 0, y: 60 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: i * 0.3 }}
-                  viewport={{ once: true }}
-                >
-                  {/* Connector dot */}
-                  <motion.div 
-                    className="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gradient-to-br from-[#8B0000] to-[#D4AF37] rounded-full shadow-xl border-4 border-white dark:border-slate-900 z-10 flex items-center justify-center"
-                    initial={{ scale: 0 }}
-                    whileInView={{ scale: 1 }}
-                    transition={{ duration: 0.5, delay: i * 0.3 }}
+              const Card = (
+                <div className="group relative rounded-3xl overflow-hidden bg-white/95 dark:bg-slate-900/50 backdrop-blur-xl border border-white/60 dark:border-white/10 shadow-2xl hover:shadow-amber-400/20 transition">
+                  {/* action */}
+                  <Link
+                    to={`/events/${ev._id}`}
+                    title="View details"
+                    className="absolute z-20 -right-3 -top-3 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-br from-[#8B0000] to-[#D4AF37] text-white shadow-2xl hover:scale-110 transition"
                   >
-                    <Sparkles className="w-3 h-3 text-white" />
-                  </motion.div>
+                    <ArrowRightCircle className="w-6 h-6 sm:w-8 sm:h-8" />
+                  </Link>
 
-                  {/* Event Card */}
-                  <div className="md:w-1/2">
-                    <motion.div
-                      className="relative rounded-3xl bg-white/95 dark:bg-slate-900/50 backdrop-blur-xl shadow-2xl overflow-hidden group transition-all duration-700 hover:shadow-2xl hover:shadow-amber-400/20 hover:-translate-y-2"
-                      whileHover={{ scale: 1.02 }}
-                    >
-                      {/* Enhanced View Icon: Larger, Branded, with Hover Glow */}
-                      <Link
-                        to={`/events/${ev._id}`}
-                        title="View details"
-                        className="absolute z-20 -right-4 -top-4 p-3 shadow-2xl rounded-2xl
-                                   bg-gradient-to-br from-[#8B0000] to-[#D4AF37]
-                                   text-white hover:scale-110 focus:outline-none focus:ring-4 focus:ring-amber-400/50
-                                   transition-all duration-300 group-hover:rotate-12"
+                  {/* image */}
+                  <div className="relative overflow-hidden">
+                    <motion.img
+                      src={img}
+                      alt={title}
+                      className="w-full h-52 sm:h-64 object-cover transition duration-700 group-hover:scale-105"
+                      initial={reduce ? false : { scale: 1.04, opacity: 0.9 }}
+                      whileInView={{ scale: 1, opacity: 1 }}
+                      viewport={{ once: true }}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          "https://images.unsplash.com/photo-1520975922323-7da4b2d42e1a?auto=format&fit=crop&w=1200&q=60";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {/* type chip */}
+                    <div className="absolute left-4 bottom-4">
+                      <span
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-white text-[11px] sm:text-xs bg-gradient-to-r ${chipColor} shadow`}
                       >
-                        <ArrowRightCircle className="w-8 h-8" />
-                      </Link>
-
-                      {/* Event Image: Fixed Aspect, Blur-Up Ready */}
-                      <div className="relative overflow-hidden">
-                        <motion.img
-                          src={img}
-                          alt={title}
-                          className="w-full h-64 object-cover transition-all duration-700 group-hover:scale-110"
-                          initial={{ scale: 1.1, opacity: 0.8 }}
-                          whileInView={{ scale: 1, opacity: 1 }}
-                          transition={{ duration: 1, delay: 0.2 }}
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.src = "https://images.unsplash.com/photo-1520975922323-7da4b2d42e1a?auto=format&fit=crop&w=1200&q=60"; // Fallback
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-
-                      {/* Event Info: Enhanced Typography & Icons */}
-                      <div className="p-8">
-                        <div className="flex items-center gap-3 mb-4 text-[#8B0000] font-semibold">
-                          <CalendarDays className="w-5 h-5 flex-shrink-0" />
-                          <span className="text-sm">{date}</span>
-                          {ev.endDate && (
-                            <>
-                              <Clock className="w-4 h-4" />
-                              <span className="text-xs opacity-80">All Day</span>
-                            </>
-                          )}
-                        </div>
-                        <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-4 leading-tight group-hover:text-[#8B0000] transition-colors">
-                          {title}
-                        </h3>
-                        {desc && (
-                          <p className="text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
-                            {desc}
-                          </p>
-                        )}
-                        <div className="mt-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Users className="w-4 h-4 text-amber-500" />
-                          <span className="text-sm text-slate-500">Join the Community</span>
-                        </div>
-                      </div>
-                    </motion.div>
+                        <CalendarDays className="w-3.5 h-3.5" />
+                        {ev.type || "Gathering"}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Empty Side for Symmetry */}
-                  <div className="hidden md:block md:w-1/2" />
-                </motion.div>
+                  {/* body */}
+                  <div className="p-6 sm:p-8">
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight group-hover:text-[#8B0000] transition-colors">
+                      {title}
+                    </h3>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-700 dark:text-slate-300">
+                      <div className="inline-flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-600" />
+                        <span>{when}</span>
+                      </div>
+                      <div className="inline-flex items-center gap-2">
+                        {ev.isOnline ? (
+                          <Video className="w-4 h-4 text-indigo-600" />
+                        ) : (
+                          <MapPin className="w-4 h-4 text-rose-600" />
+                        )}
+                        <span className="truncate max-w-[18ch] sm:max-w-none">{where}</span>
+                      </div>
+                    </div>
+
+                    {ev.description && (
+                      <p className="mt-3 text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
+                        {ev.description}
+                      </p>
+                    )}
+
+                    <div className="mt-5 flex flex-wrap items-center gap-3">
+                      {typeof ev.expectedAttendees === "number" && (
+                        <span className="inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full border border-slate-300/60 dark:border-white/15 text-slate-700 dark:text-slate-200">
+                          <Users className="w-3.5 h-3.5" />
+                          {ev.expectedAttendees.toLocaleString()} expected
+                        </span>
+                      )}
+
+                      <a
+                        href={googleCalLink(ev)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-white/80 dark:bg-white/10 border border-slate-300/60 dark:border-white/15 hover:bg-white/90 dark:hover:bg-white/15 transition"
+                      >
+                        <CalendarPlus className="w-3.5 h-3.5" />
+                        Add to Calendar
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+
+              return (
+                <motion.article
+                  key={ev._id || i}
+                  initial={reduce ? false : { opacity: 0, y: 48 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.6, delay: i * 0.1 }}
+                  className="relative md:grid md:grid-cols-2 md:gap-12 items-center"
+                >
+                  {/* dot for this row */}
+                  <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full border-4 border-white dark:border-slate-900 bg-gradient-to-br from-[#8B0000] to-[#D4AF37] shadow-xl items-center justify-center">
+                    <Sparkles className="w-3 h-3 text-white" />
+                  </div>
+
+                  {i % 2 === 0 ? (
+                    <>
+                      {/* Left card, right spacer */}
+                      <div className="md:col-span-1">{Card}</div>
+                      <div className="hidden md:block" />
+                    </>
+                  ) : (
+                    <>
+                      {/* Left spacer, right card */}
+                      <div className="hidden md:block" />
+                      <div className="md:col-span-1">{Card}</div>
+                    </>
+                  )}
+                </motion.article>
               );
             })}
           </div>
 
-          {/* View All CTA */}
+          {/* view all */}
           <motion.div
-            className="text-center mt-16"
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-center mt-14"
           >
             <Link
               to="/events"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white font-medium shadow-lg hover:shadow-amber-500/30 transition-all duration-300"
+              className="inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white font-medium shadow-lg hover:brightness-105 transition"
             >
               View All Events
-              <ArrowRightCircle className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRightCircle className="w-5 h-5" />
             </Link>
           </motion.div>
         </div>
@@ -204,56 +292,39 @@ export default function Events() {
 
       {!isLoading && events.length === 0 && (
         <motion.div
-          className="max-w-5xl mx-auto px-6 text-center"
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={reduce ? false : { opacity: 0, scale: 0.97 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="max-w-5xl mx-auto px-6 text-center"
         >
-          <div className="rounded-3xl p-12 border bg-white/80 dark:bg-slate-900/70 text-slate-600 dark:text-slate-300">
-            <Sparkles className="w-16 h-16 text-amber-500 mx-auto mb-4 opacity-50" />
-            <h3 className="text-2xl font-serif font-light mb-2">No Events Yet</h3>
+          <div className="rounded-3xl p-10 sm:p-12 border bg-white/85 dark:bg-slate-900/70 text-slate-600 dark:text-slate-300">
+            <Sparkles className="w-14 h-14 text-amber-500 mx-auto mb-3 opacity-60" />
+            <h3 className="text-xl sm:text-2xl font-serif font-light mb-1">No Events Yet</h3>
             <p className="text-sm">Please check back soon for upcoming gatherings.</p>
           </div>
         </motion.div>
       )}
-
-      {/* Floating Sparkles */}
-      <motion.div
-        className="absolute bottom-16 left-1/2 -translate-x-1/2 text-amber-400/40"
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 3, repeat: Infinity }}
-      >
-        <Sparkles className="w-16 h-16" />
-      </motion.div>
     </section>
   );
 }
 
-/* ---------- Pretty skeleton while loading ---------- */
+/* ---------------------------- fancy skeleton ---------------------------- */
 function SkeletonTimeline() {
   return (
-    <div className="relative max-w-5xl mx-auto px-6">
-      <div className="absolute left-1/2 transform -translate-x-1/2 top-0 bottom-0 w-[4px] bg-gradient-to-b from-slate-300/50 via-slate-200/50 to-transparent opacity-40 rounded-full" />
-      <div className="space-y-28">
+    <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[4px] bg-gradient-to-b from-slate-300/50 via-slate-200/50 to-transparent rounded-full" />
+      <div className="space-y-14 sm:space-y-20">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className={`relative flex flex-col md:flex-row items-center ${
-              i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-            } gap-12`}
-          >
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-8 h-8 bg-slate-200 rounded-full border-4 border-white dark:border-slate-900 animate-pulse" />
-            <div className="md:w-1/2">
-              <div className="rounded-3xl bg-white dark:bg-slate-900/40 shadow-lg overflow-hidden animate-pulse">
-                <div className="w-full h-64 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700" />
-                <div className="p-8 space-y-4">
-                  <div className="h-4 w-32 bg-slate-200 dark:bg-white/10 rounded" />
-                  <div className="h-6 w-80 bg-slate-200 dark:bg-white/10 rounded" />
-                  <div className="h-4 w-full bg-slate-200 dark:bg-white/10 rounded" />
-                </div>
+          <div key={i} className="md:grid md:grid-cols-2 items-center md:gap-12">
+            <div className="rounded-3xl overflow-hidden border bg-white/80 dark:bg-slate-900/40 shadow animate-pulse">
+              <div className="w-full h-52 sm:h-64 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700" />
+              <div className="p-6 sm:p-8 space-y-3">
+                <div className="h-4 w-36 bg-slate-200 dark:bg-white/10 rounded" />
+                <div className="h-6 w-3/4 bg-slate-200 dark:bg-white/10 rounded" />
+                <div className="h-4 w-full bg-slate-200 dark:bg-white/10 rounded" />
               </div>
             </div>
-            <div className="hidden md:block md:w-1/2" />
+            <div className="hidden md:block" />
           </div>
         ))}
       </div>
