@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../api/features/auth/store/useAuthStore";
 import { roleBasedNav } from "./roleBasedNav";
+import Logo from "../assets/images/logo1.png";
 
 type NavItem = {
   name: string;
@@ -137,13 +138,13 @@ function Header({ isCollapsed }: { isCollapsed: boolean }) {
     <div className="flex items-center gap-3 px-4 py-4 border-b border-slate-200/40 dark:border-slate-700/40 relative">
       <Link
         to="/"
-        className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B0000] via-[#A52A2A] to-[#D4AF37] flex items-center justify-center text-white font-bold shadow-lg"
+        className="w-10 h-10 rounded-xl  flex items-center justify-center text-white font-bold "
       >
-        DC
+        <img src={Logo} alt="Logo" className="h-6 w-6 rounded-lg object-cover " />
       </Link>
       {!isCollapsed && (
         <h1 className="text-xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent whitespace-nowrap tracking-tight">
-          Connect Hub
+          
         </h1>
       )}
     </div>
