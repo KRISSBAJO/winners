@@ -1,22 +1,22 @@
-import { useState } from "react";
-import { z } from "zod";
-import { Facebook, Instagram, Youtube, Mail, MapPin, CheckCircle, AlertCircle } from "lucide-react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Facebook,
+  Instagram,
+  Youtube,
+  Mail,
+  MapPin,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import { z } from "zod";
+import { useState } from "react";
 import Logo from "../assets/images/logo1.png";
 
-const emailSchema = z.string().email("Please enter a valid email address");
+const emailSchema = z.string().email("Invalid email address");
 
 const BRAND_RED = "#8B0000";
 const BRAND_GOLD = "#D4AF37";
-
-// Brand colors (tuned to your hero)
-const COLORS = {
-  ivoryFrom: "#FFF9F0",
-  ivoryTo: "#FFF3E6",
-  gold: "#D4AF37",
-  deepBlue: "#0F1B34", // deep navy for text
-  goldSoft: "rgba(212, 175, 55, 0.18)",
-};
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -44,58 +44,36 @@ export default function Footer() {
   };
 
   return (
-    <footer
-      className="relative overflow-hidden"
-      style={{
-        background: `linear-gradient(180deg, ${COLORS.ivoryFrom} 0%, ${COLORS.ivoryTo} 100%)`,
-        color: COLORS.deepBlue,
-        "--deepBlue": COLORS.deepBlue,
-        "--gold": COLORS.gold,
-      } as React.CSSProperties}
-      aria-label="Footer"
-    >
-      {/* Subtle gold dust overlay */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-40"
-        style={{
-          background:
-            "radial-gradient(circle at 20% 10%, rgba(212,175,55,0.12) 0 12%, transparent 13%)," +
-            "radial-gradient(circle at 80% 20%, rgba(212,175,55,0.10) 0 10%, transparent 11%)," +
-            "radial-gradient(circle at 50% 80%, rgba(212,175,55,0.08) 0 18%, transparent 19%)",
-        }}
-      />
-
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-8 py-16 lg:py-20">
+    <footer className="relative bg-white dark:bg-slate-950 border-t border-slate-200/50 dark:border-slate-800/50">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12 lg:py-16">
         {/* Newsletter */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-12 lg:mb-16"
         >
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mb-4">
-            Join Our Community
+          <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-4">
+            Stay Connected
           </h2>
-          <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
-            Receive inspiring messages, event updates, and ministry resources delivered straight to your inbox. Stay connected and grow in faith.
+          <p className="text-base lg:text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto mb-6">
+            Get updates on events, messages, and more.
           </p>
 
           <form
             onSubmit={handleSubmit}
-            className="mx-auto grid w-full max-w-md grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]"
+            className="mx-auto flex max-w-md flex-col gap-3 sm:flex-row"
             noValidate
-            aria-label="Newsletter signup"
           >
-            <div className="relative">
+            <div className="relative flex-1">
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email address"
-                aria-label="Email address"
+                placeholder="Your email"
                 disabled={submitting}
-                className="w-full rounded-xl border border-slate-300/50 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/50 px-4 py-3 text-slate-700 dark:text-slate-300 placeholder-slate-500 dark:placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-transparent transition-all"
+                className="w-full rounded-full border border-slate-300 dark:border-slate-700 bg-transparent px-4 py-3 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:border-gold-400 transition"
               />
             </div>
             <motion.button
@@ -103,23 +81,22 @@ export default function Footer() {
               disabled={submitting}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="rounded-xl px-6 py-3 font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all text-white"
+              className="rounded-full px-6 py-3 font-medium text-white shadow-md disabled:opacity-50 transition"
               style={{
-                  background: `linear-gradient(135deg, ${BRAND_RED}, ${BRAND_GOLD})`,
-                }}
-              aria-label="Subscribe to newsletter"
+                background: `linear-gradient(to right, ${BRAND_RED}, ${BRAND_GOLD})`,
+              }}
             >
-              {submitting ? "Subscribing..." : "Subscribe"}
+              {submitting ? "Joining..." : "Subscribe"}
             </motion.button>
           </form>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {error && (
               <motion.p
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="mt-3 flex items-center justify-center gap-2 text-red-600"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mt-3 flex items-center justify-center gap-2 text-red-500 text-sm"
               >
                 <AlertCircle size={16} />
                 {error}
@@ -127,151 +104,130 @@ export default function Footer() {
             )}
             {success && (
               <motion.p
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="mt-3 flex items-center justify-center gap-2 text-emerald-600"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mt-3 flex items-center justify-center gap-2 text-green-500 text-sm"
               >
                 <CheckCircle size={16} />
-                Thank you for subscribing! Check your email to confirm.
+                Subscribed successfully!
               </motion.p>
             )}
           </AnimatePresence>
         </motion.section>
 
-        {/* Info blocks */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid gap-8 md:gap-12 text-center md:text-left md:grid-cols-3"
-        >
+        {/* Divider */}
+        <hr className="my-8 border-slate-200 dark:border-slate-800" />
+
+        {/* Main Content */}
+        <div className="grid gap-8 md:grid-cols-3 lg:gap-12">
           <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="space-y-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="space-y-4"
           >
-            <h3 className="text-lg font-semibold text-deepBlue flex items-center justify-center md:justify-start gap-2">
-              <MapPin size={20} className="text-gold" />
-              Visit Us
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed flex items-center justify-center md:justify-start gap-2">
-              <span>8918 Old Hickory Blvd</span>
-              <br className="md:hidden" />
-              <span>Nashville, TN 37221</span>
+            <div className="flex items-center gap-2">
+              <img src={Logo} alt="Logo" className="h-8 w-8" />
+              <span className="font-bold text-lg text-slate-900 dark:text-white">
+                Dominion Connect
+              </span>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Empowering faith communities with seamless connections.
             </p>
           </motion.div>
 
           <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
-            className="space-y-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="space-y-4"
           >
-            <h3 className="text-lg font-semibold text-deepBlue flex items-center justify-center md:justify-start gap-2">
-              <Mail size={20} className="text-gold" />
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
               Contact
             </h3>
-            <a
-              href="mailto:info@winnerschapelnashville.org"
-              className="flex items-center justify-center md:justify-start gap-2 text-slate-600 dark:text-slate-400 hover:text-deepBlue underline-offset-2 transition-colors"
-              aria-label="Send email to Winners Chapel Nashville"
-            >
-              info@winnerschapelnashville.org
-            </a>
+            <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+              <li className="flex items-center gap-2">
+                <Mail size={16} className="text-gold-500" />
+                <a
+                  href="mailto:info@winnerschapelnashville.org"
+                  className="hover:text-gold-500 transition"
+                >
+                  info@winnerschapelnashville.org
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <MapPin size={16} className="text-gold-500" />
+                  5270 Murfreesboro Rd, La Vergne, TN 37086
+              </li>
+            </ul>
           </motion.div>
 
           <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.5 }}
-            className="space-y-3"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="space-y-4"
           >
-            <h3 className="text-lg font-semibold text-deepBlue flex items-center justify-center md:justify-start gap-2">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
               Follow Us
             </h3>
-            <div className="flex justify-center md:justify-start gap-4">
+            <div className="flex gap-4">
               <a
                 href="https://facebook.com/winnerschapelnashville"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/50 dark:border-slate-700/50 hover:border-gold/50 hover:shadow-md transition-all shadow-sm"
-                aria-label="Follow on Facebook"
+                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-gold-100 dark:hover:bg-gold-900/20 transition"
+                aria-label="Facebook"
               >
-                <Facebook size={20} className="text-slate-700 dark:text-slate-300 group-hover:text-gold transition-colors" />
+                <Facebook size={20} className="text-slate-600 dark:text-slate-300 hover:text-gold-500" />
               </a>
               <a
                 href="https://instagram.com/winnerschapelnashville"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/50 dark:border-slate-700/50 hover:border-gold/50 hover:shadow-md transition-all shadow-sm"
-                aria-label="Follow on Instagram"
+                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-gold-100 dark:hover:bg-gold-900/20 transition"
+                aria-label="Instagram"
               >
-                <Instagram size={20} className="text-slate-700 dark:text-slate-300 group-hover:text-gold transition-colors" />
+                <Instagram size={20} className="text-slate-600 dark:text-slate-300 hover:text-gold-500" />
               </a>
               <a
                 href="https://youtube.com/winnerschapelnashville"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group p-2 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-slate-200/50 dark:border-slate-700/50 hover:border-gold/50 hover:shadow-md transition-all shadow-sm"
-                aria-label="Subscribe on YouTube"
+                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-gold-100 dark:hover:bg-gold-900/20 transition"
+                aria-label="YouTube"
               >
-                <Youtube size={20} className="text-slate-700 dark:text-slate-300 group-hover:text-gold transition-colors" />
+                <Youtube size={20} className="text-slate-600 dark:text-slate-300 hover:text-gold-500" />
               </a>
             </div>
           </motion.div>
-        </motion.section>
+        </div>
 
-        {/* Divider */}
-        <motion.hr
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          transition={{ duration: 0.8 }}
-          className="my-12 h-px bg-gradient-to-r from-transparent via-slate-300/50 to-transparent dark:via-slate-700/50"
-          aria-hidden
-        />
-
-        {/* Bottom bar */}
-        <motion.footer
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+        {/* Bottom */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-col items-center justify-between gap-4 text-sm text-slate-600 dark:text-slate-400 sm:flex-row"
+          className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 text-center text-sm text-slate-500 dark:text-slate-500"
         >
-          <div className="flex items-center gap-2">
-            <div
-              className="h-8 w-8 rounded-lg flex items-center justify-center "
-              
-            >
-              <img src={Logo} alt="Logo" className="h-6 w-6 rounded-lg object-cover " />
-            </div>
-            <span className="font-semibold text-deepBlue">
-              Dominion Connect
-            </span>
-          </div>
-
-          <p className="text-center">
-            &copy; {new Date().getFullYear()} Winners Chapel Nashville. All rights reserved.
+          <p>
+            © {new Date().getFullYear()} Dominion Connect. All rights reserved.
           </p>
-
-          <nav className="flex gap-6">
-            <a
-              href="/privacy"
-              className="hover:text-deepBlue underline-offset-2 transition-colors"
-              aria-label="Privacy Policy"
-            >
-              Privacy Policy
+          <div className="mt-2 flex justify-center gap-6">
+            <a href="/privacy" className="hover:text-gold-500 transition">
+              Privacy
             </a>
-            <a
-              href="/terms"
-              className="hover:text-deepBlue underline-offset-2 transition-colors"
-              aria-label="Terms of Service"
-            >
-              Terms of Service
+            <a href="/terms" className="hover:text-gold-500 transition">
+              Terms
             </a>
-          </nav>
-        </motion.footer>
+          </div>
+        </motion.div>
       </div>
     </footer>
   );

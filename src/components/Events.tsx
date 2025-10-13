@@ -133,7 +133,7 @@ export default function Events() {
           {/* center line */}
           <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[4px] bg-gradient-to-b from-[#8B0000]/40 via-[#D4AF37]/60 to-[#8B0000]/20 rounded-full" />
 
-          <div className="space-y-14 sm:space-y-20">
+          <div className="space-y-8 sm:space-y-12">
             {events.map((ev: any, i: number) => {
               const img =
                 ev.coverImageUrl ||
@@ -153,14 +153,14 @@ export default function Events() {
                   : "from-amber-500 to-rose-500";
 
               const Card = (
-                <div className="group relative rounded-3xl overflow-hidden bg-white/95 dark:bg-slate-900/50 backdrop-blur-xl border border-white/60 dark:border-white/10 shadow-2xl hover:shadow-amber-400/20 transition">
+                <div className="group relative rounded-2xl overflow-hidden bg-white/95 dark:bg-slate-900/50 backdrop-blur-xl border border-white/60 dark:border-white/10 shadow-xl hover:shadow-amber-400/30 transition-all duration-300 hover:scale-105">
                   {/* action */}
                   <Link
                     to={`/events/${ev._id}`}
                     title="View details"
-                    className="absolute z-20 -right-3 -top-3 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-br from-[#8B0000] to-[#D4AF37] text-white shadow-2xl hover:scale-110 transition"
+                    className="absolute z-20 right-2 top-2 p-1.5 rounded-full bg-gradient-to-br from-[#8B0000] to-[#D4AF37] text-white shadow-md hover:scale-110 transition"
                   >
-                    <ArrowRightCircle className="w-6 h-6 sm:w-8 sm:h-8" />
+                    <ArrowRightCircle className="w-4 h-4" />
                   </Link>
 
                   {/* image */}
@@ -168,8 +168,8 @@ export default function Events() {
                     <motion.img
                       src={img}
                       alt={title}
-                      className="w-full h-52 sm:h-64 object-cover transition duration-700 group-hover:scale-105"
-                      initial={reduce ? false : { scale: 1.04, opacity: 0.9 }}
+                      className="w-full h-32 sm:h-40 object-cover transition duration-500 group-hover:scale-110"
+                      initial={reduce ? false : { scale: 1.05, opacity: 0.8 }}
                       whileInView={{ scale: 1, opacity: 1 }}
                       viewport={{ once: true }}
                       loading="lazy"
@@ -178,50 +178,50 @@ export default function Events() {
                           "https://images.unsplash.com/photo-1520975922323-7da4b2d42e1a?auto=format&fit=crop&w=1200&q=60";
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
                     {/* type chip */}
-                    <div className="absolute left-4 bottom-4">
+                    <div className="absolute left-3 bottom-3">
                       <span
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-white text-[11px] sm:text-xs bg-gradient-to-r ${chipColor} shadow`}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-white text-xs bg-gradient-to-r ${chipColor} shadow`}
                       >
-                        <CalendarDays className="w-3.5 h-3.5" />
+                        <CalendarDays className="w-3 h-3" />
                         {ev.type || "Gathering"}
                       </span>
                     </div>
                   </div>
 
                   {/* body */}
-                  <div className="p-6 sm:p-8">
-                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-tight group-hover:text-[#8B0000] transition-colors">
+                  <div className="p-4 sm:p-6 space-y-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-tight line-clamp-1 group-hover:text-[#8B0000] transition-colors">
                       {title}
                     </h3>
 
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-700 dark:text-slate-300">
-                      <div className="inline-flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-amber-600" />
-                        <span>{when}</span>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-700 dark:text-slate-300">
+                      <div className="inline-flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                        <span className="truncate max-w-[14ch] sm:max-w-none">{when}</span>
                       </div>
-                      <div className="inline-flex items-center gap-2">
+                      <div className="inline-flex items-center gap-1">
                         {ev.isOnline ? (
-                          <Video className="w-4 h-4 text-indigo-600" />
+                          <Video className="w-3.5 h-3.5 text-indigo-600" />
                         ) : (
-                          <MapPin className="w-4 h-4 text-rose-600" />
+                          <MapPin className="w-3.5 h-3.5 text-rose-600" />
                         )}
-                        <span className="truncate max-w-[18ch] sm:max-w-none">{where}</span>
+                        <span className="truncate max-w-[14ch] sm:max-w-none">{where}</span>
                       </div>
                     </div>
 
                     {ev.description && (
-                      <p className="mt-3 text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2">
                         {ev.description}
                       </p>
                     )}
 
-                    <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                       {typeof ev.expectedAttendees === "number" && (
-                        <span className="inline-flex items-center gap-2 text-xs px-2.5 py-1 rounded-full border border-slate-300/60 dark:border-white/15 text-slate-700 dark:text-slate-200">
-                          <Users className="w-3.5 h-3.5" />
-                          {ev.expectedAttendees.toLocaleString()} expected
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border border-slate-300/60 dark:border-white/15 text-slate-700 dark:text-slate-200">
+                          <Users className="w-3 h-3" />
+                          {ev.expectedAttendees.toLocaleString()}
                         </span>
                       )}
 
@@ -229,10 +229,10 @@ export default function Events() {
                         href={googleCalLink(ev)}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-white/80 dark:bg-white/10 border border-slate-300/60 dark:border-white/15 hover:bg-white/90 dark:hover:bg-white/15 transition"
+                        className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-white/80 dark:bg-white/10 border border-slate-300/60 dark:border-white/15 hover:bg-white/90 dark:hover:bg-white/15 transition"
                       >
-                        <CalendarPlus className="w-3.5 h-3.5" />
-                        Add to Calendar
+                        <CalendarPlus className="w-3 h-3" />
+                        Add
                       </a>
                     </div>
                   </div>
@@ -242,15 +242,15 @@ export default function Events() {
               return (
                 <motion.article
                   key={ev._id || i}
-                  initial={reduce ? false : { opacity: 0, y: 48 }}
+                  initial={reduce ? false : { opacity: 0, y: 32 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.6, delay: i * 0.1 }}
-                  className="relative md:grid md:grid-cols-2 md:gap-12 items-center"
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="relative md:grid md:grid-cols-2 md:gap-8 items-center"
                 >
                   {/* dot for this row */}
-                  <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full border-4 border-white dark:border-slate-900 bg-gradient-to-br from-[#8B0000] to-[#D4AF37] shadow-xl items-center justify-center">
-                    <Sparkles className="w-3 h-3 text-white" />
+                  <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full border-2 border-white dark:border-slate-900 bg-gradient-to-br from-[#8B0000] to-[#D4AF37] shadow-md items-center justify-center">
+                    <Sparkles className="w-2.5 h-2.5 text-white" />
                   </div>
 
                   {i % 2 === 0 ? (
@@ -277,14 +277,14 @@ export default function Events() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-center mt-14"
+            className="text-center mt-10"
           >
             <Link
               to="/events"
-              className="inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white font-medium shadow-lg hover:brightness-105 transition"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white font-medium shadow-lg hover:brightness-105 transition"
             >
-              View All Events
-              <ArrowRightCircle className="w-5 h-5" />
+              View All
+              <ArrowRightCircle className="w-4 h-4" />
             </Link>
           </motion.div>
         </div>
@@ -313,15 +313,15 @@ function SkeletonTimeline() {
   return (
     <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
       <div className="hidden md:block absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[4px] bg-gradient-to-b from-slate-300/50 via-slate-200/50 to-transparent rounded-full" />
-      <div className="space-y-14 sm:space-y-20">
+      <div className="space-y-8 sm:space-y-12">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="md:grid md:grid-cols-2 items-center md:gap-12">
-            <div className="rounded-3xl overflow-hidden border bg-white/80 dark:bg-slate-900/40 shadow animate-pulse">
-              <div className="w-full h-52 sm:h-64 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700" />
-              <div className="p-6 sm:p-8 space-y-3">
-                <div className="h-4 w-36 bg-slate-200 dark:bg-white/10 rounded" />
-                <div className="h-6 w-3/4 bg-slate-200 dark:bg-white/10 rounded" />
-                <div className="h-4 w-full bg-slate-200 dark:bg-white/10 rounded" />
+          <div key={i} className="md:grid md:grid-cols-2 items-center md:gap-8">
+            <div className="rounded-2xl overflow-hidden border bg-white/80 dark:bg-slate-900/40 shadow animate-pulse">
+              <div className="w-full h-32 sm:h-40 bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700" />
+              <div className="p-4 sm:p-6 space-y-2">
+                <div className="h-4 w-32 bg-slate-200 dark:bg-white/10 rounded" />
+                <div className="h-3 w-2/3 bg-slate-200 dark:bg-white/10 rounded" />
+                <div className="h-3 w-full bg-slate-200 dark:bg-white/10 rounded" />
               </div>
             </div>
             <div className="hidden md:block" />

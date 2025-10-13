@@ -11,16 +11,16 @@ export default function Topbar({ onOpenSidebar }: { onOpenSidebar?: () => void }
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between gap-3 px-4 sm:px-6 py-3 bg-white/60 dark:bg-slate-900/70 backdrop-blur-xl border-b border-slate-200/60 dark:border-white/10 shadow-sm">
-      {/* Left: hamburger (mobile) + search */}
+      {/* Left: hamburger (mobile/tablet) + search */}
       <div className="flex items-center gap-2 w-full max-w-xs">
         <button
-          className="md:hidden p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700/50 transition"
+          className="lg:hidden p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-700/50 transition"
           onClick={onOpenSidebar}
           aria-label="Open sidebar"
         >
           <Menu size={18} />
         </button>
-        <div className="relative flex-1">
+        <div className="relative flex-1 hidden md:block"> {/* Show search on md+ (768px+), hide on small mobile */}
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
             placeholder="Search..."
