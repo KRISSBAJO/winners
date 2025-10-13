@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate, useBeforeUnload } from "react-router-dom";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useMember, useUpdateMember } from "../hooks/useMembers";
 import { useGroupsByChurch, useAssignLeader } from "../../volunteerGroups/hooks/useVolunteerGroups";
-import type { Member, UpdateMemberInput } from "../types/memberTypes";
+import { FancyCheckbox, FancyInput, FancySelect, FancyDate,  FancyTextarea
+
+ } from "../../../../components/ui/Fancy";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -25,74 +27,169 @@ import {
   Loader2,
   BadgeCheck,
   X,
+  PlusCircle,
+  Trash2,
 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../../components/ui/tabs";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
-const sectionVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
-  }),
-};
+const addressSchema = z.object({
+  street: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+  zip: z.string().optional(),
+});
 
-const inputVariants = {
-  focus: { scale: 1.02, boxShadow: "0 0 0 3px rgba(139, 0, 0, 0.1)" },
-  hover: { scale: 1.01 },
-};
+const childSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  dob: z.date().optional(),
+});
+
+const formSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  middleName: z.string().optional(),
+  lastName: z.string().min(1, "Last name is required"),
+  gender: z.enum(["Male", "Female", "Other"]).optional(),
+  dob: z.date().optional(),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  altPhone: z.string().optional(),
+  address: addressSchema.optional(),
+  maritalStatus: z.enum(["Single", "Married", "Divorced", "Widowed"]).optional(),
+  spouseName: z.string().optional(),
+  weddingAnniversary: z.date().optional(),
+  salvationDate: z.date().optional(),
+  baptismDate: z.date().optional(),
+  holyGhostBaptism: z.boolean().optional(),
+  membershipStatus: z.enum(["Active", "Visitor", "New Convert", "Inactive"]),
+  joinDate: z.date().optional(),
+  invitedBy: z.string().optional(),
+  role: z.string().optional(),
+  volunteerGroups: z.array(z.string()).optional(),
+  isLeader: z.boolean().optional(),
+  familyId: z.string().optional(),
+  household: z.object({
+    spouse: z.string().optional(),
+    children: z.array(childSchema).optional(),
+    dependents: z.array(z.string()).optional(),
+  }).optional(),
+  photoUrl: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 export default function EditMember() {
   const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
   const { data: member, isLoading, isError } = useMember(id);
   const update = useUpdateMember(id || "");
-  const [form, setForm] = useState<Partial<UpdateMemberInput>>({});
   const assignLeader = useAssignLeader();
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+
+  const reduce = useReducedMotion();
 
   // load groups by member's church
   const churchId =
     typeof member?.churchId === "string" ? member?.churchId : (member?.churchId as any)?._id;
   const { data: groups = [] } = useGroupsByChurch(churchId);
 
+  const { register, handleSubmit, formState: { errors, isDirty }, reset, control, watch, setValue } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      middleName: "",
+      gender: undefined,
+      dob: undefined,
+      email: "",
+      phone: "",
+      altPhone: "",
+      address: {},
+      maritalStatus: undefined,
+      spouseName: "",
+      weddingAnniversary: undefined,
+      salvationDate: undefined,
+      baptismDate: undefined,
+      holyGhostBaptism: false,
+      membershipStatus: "Active",
+      joinDate: undefined,
+      invitedBy: "",
+      role: "",
+      volunteerGroups: [],
+      isLeader: false,
+      familyId: "",
+      household: {
+        spouse: "",
+        children: [],
+        dependents: [],
+      },
+      photoUrl: "",
+      notes: "",
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "household.children",
+  });
+
   useEffect(() => {
     if (member) {
-      setForm({
+      reset({
         firstName: member.firstName,
-        middleName: member.middleName,
+        middleName: member.middleName || "",
         lastName: member.lastName,
-        email: member.email,
-        phone: member.phone,
-        altPhone: member.altPhone,
         gender: member.gender,
         dob: member.dob ? new Date(member.dob) : undefined,
-        maritalStatus: member.maritalStatus,
-        spouseName: member.spouseName,
-        weddingAnniversary: member.weddingAnniversary ? new Date(member.weddingAnniversary) : undefined,
+        email: member.email || "",
+        phone: member.phone || "",
+        altPhone: member.altPhone || "",
         address: member.address || {},
+        maritalStatus: member.maritalStatus,
+        spouseName: member.spouseName || "",
+        weddingAnniversary: member.weddingAnniversary ? new Date(member.weddingAnniversary) : undefined,
         salvationDate: member.salvationDate ? new Date(member.salvationDate) : undefined,
         baptismDate: member.baptismDate ? new Date(member.baptismDate) : undefined,
-        holyGhostBaptism: member.holyGhostBaptism,
-        membershipStatus: member.membershipStatus,
+        holyGhostBaptism: !!member.holyGhostBaptism,
+        membershipStatus: member.membershipStatus || "Active",
         joinDate: member.joinDate ? new Date(member.joinDate) : undefined,
-        invitedBy: member.invitedBy,
-        role: member.role,
+        invitedBy: member.invitedBy || "",
+        role: member.role || "",
         volunteerGroups: member.volunteerGroups || [],
-        isLeader: member.isLeader,
-        familyId: member.familyId,
-        household: member.household || {},
-        photoUrl: member.photoUrl,
-        notes: member.notes,
+        isLeader: !!member.isLeader,
+        familyId: member.familyId || "",
+        household: {
+          spouse: member.household?.spouse || "",
+          children: (member.household?.children ?? []).map((child) => ({
+            ...child,
+            dob: child.dob ? new Date(child.dob) : undefined,
+          })) || [],
+          dependents: member.household?.dependents || [],
+        },
+        photoUrl: member.photoUrl || "",
+        notes: member.notes || "",
       });
     }
-  }, [member]);
+  }, [member, reset]);
+
+  useBeforeUnload((event) => {
+    if (isDirty) {
+      event.preventDefault();
+      return "You have unsaved changes. Are you sure you want to leave?";
+    }
+  });
 
   const submitting = update.isPending || assignLeader.isPending;
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: FormData) => {
     if (!id) return;
     try {
-      await update.mutateAsync(form);
+      // TODO: Handle photo upload if photoFile, set data.photoUrl = uploaded url
+      await update.mutateAsync(data);
       toast.success("Member updated successfully!");
       nav(-1);
     } catch (err) {
@@ -101,11 +198,11 @@ export default function EditMember() {
   };
 
   const toggleGroup = (gid: string) => {
-    setForm((p) => {
-      const set = new Set(p.volunteerGroups || []);
-      set.has(gid) ? set.delete(gid) : set.add(gid);
-      return { ...p, volunteerGroups: Array.from(set) };
-    });
+    const current = watch("volunteerGroups") || [];
+    const updated = current.includes(gid)
+      ? current.filter((id) => id !== gid)
+      : [...current, gid];
+    setValue("volunteerGroups", updated);
   };
 
   const makeLeader = async (groupId: string) => {
@@ -115,6 +212,15 @@ export default function EditMember() {
       toast.success(`Assigned as leader of "${groups.find(g => g._id === groupId)?.name}"`);
     } catch (err) {
       toast.error("Failed to assign leadership.");
+    }
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+      setValue("photoUrl", URL.createObjectURL(file));
+      // TODO: Upload to server and set actual URL
     }
   };
 
@@ -150,142 +256,133 @@ export default function EditMember() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-700 p-6 rounded-md">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-6 lg:p-8 rounded-3xl">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-5xl mx-auto bg-white dark:bg-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
       >
-        {/* Header */}
-        <motion.header
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => nav(-1)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 dark:bg-slate-800/70 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/70 shadow-sm transition-all"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Members
-          </motion.button>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="flex items-center gap-2 bg-gradient-to-r from-amber-400/20 to-amber-500/20 px-4 py-2 rounded-full border border-amber-200/50 text-sm font-medium text-amber-700 dark:text-amber-300"
-          >
-            <BadgeCheck className="w-4 h-4" />
-            Member ID: {member._id}
-          </motion.div>
-        </motion.header>
+      {/* Minimal sticky header (replaces both header + gradient banner) */}
+<header
+  className="sticky top-0 z-30 border-b border-slate-200/60 dark:border-slate-800/60
+             bg-gradient-to-br from-amber-200 to-yellow-50 dark:from-slate-900 dark:to-slate-800 backdrop-blur h-24 supports-[backdrop-filter]:bg-white/60"
+  role="region"
+  aria-label="Member editor actions"
+>
+  <div className="mx-auto max-w-5xl px-4 sm:px-6 py-3 sm:py-3.5 grid grid-cols-3 items-center gap-3">
+    {/* Back */}
+    <button
+      type="button"
+      onClick={() => nav(-1)}
+      className="justify-self-start inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5
+                 bg-slate-100/70 hover:bg-slate-200/70
+                 dark:bg-slate-800/60 dark:hover:bg-slate-700/60
+                 text-slate-700 dark:text-slate-200
+                 ring-1 ring-slate-200/70 dark:ring-slate-700
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
+      aria-label="Go back"
+    >
+      <ArrowLeft className="h-4 w-4" aria-hidden />
+      <span className="hidden sm:inline">Back</span>
+    </button>
 
-        {/* Form */}
-        <motion.form
-          onSubmit={onSubmit}
-          className="space-y-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Identity */}
-          <Section title="Personal Identity" icon={<User className="w-4 h-4 text-blue-500" />} index={0}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {/* Center: avatar + name + status */}
+    <div className="justify-self-center min-w-0 flex items-center gap-3">
+      <div className="relative">
+        <img
+          src={watch("photoUrl") || "https://placehold.co/40x40?text=PC"}
+          alt=""
+          className="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700"
+        />
+        {/* tiny edit badge (optional) */}
+        <label className="absolute -bottom-1 -right-1 p-1 bg-white dark:bg-slate-800 rounded-full shadow cursor-pointer ring-1 ring-slate-200 dark:ring-slate-700">
+          <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+          <Edit3 className="h-3.5 w-3.5 text-slate-500 dark:text-slate-300" />
+        </label>
+      </div>
+
+      <div className="min-w-0">
+        <div className="truncate font-semibold text-slate-900 dark:text-slate-100">
+          {member.firstName} {member.middleName} {member.lastName}
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+          <BadgeCheck className="h-3.5 w-3.5" />
+          <span className="truncate">{member.membershipStatus}</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Save */}
+    <button
+      type="button"
+      onClick={handleSubmit(onSubmit)}
+      disabled={submitting}
+      className="justify-self-end inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium
+                 text-white shadow-sm disabled:opacity-70 disabled:cursor-not-allowed
+                 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40"
+      style={{
+        background: submitting
+          ? "linear-gradient(135deg,#6B7280,#9CA3AF)"
+          : "linear-gradient(135deg,#8B0000,#D4AF37)",
+      }}
+      aria-live="polite"
+      aria-busy={submitting}
+    >
+      {submitting ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          Saving…
+        </>
+      ) : (
+        <>
+          <Save className="h-4 w-4" aria-hidden />
+          Save
+        </>
+      )}
+    </button>
+  </div>
+</header>
+
+
+        {/* Tabs */}
+        <Tabs defaultValue="personal" className="p-6 space-y-8 ">
+          <TabsList className="flex flex-wrap gap-2 bg-transparent border-b-0">
+            <TabsTrigger value="personal" className="rounded-full shadow-md hover:bg-slate-200">Personal</TabsTrigger>
+            <TabsTrigger value="contact" className="rounded-full shadow-md hover:bg-slate-200">Contact</TabsTrigger>
+            <TabsTrigger value="spiritual" className="rounded-full shadow-md hover:bg-slate-200">Spiritual</TabsTrigger>
+            <TabsTrigger value="family" className="rounded-full shadow-md hover:bg-slate-200">Family</TabsTrigger>
+            <TabsTrigger value="volunteer" className="rounded-full shadow-md hover:bg-slate-200">Volunteer</TabsTrigger>
+            <TabsTrigger value="notes" className="rounded-full shadow-md hover:bg-slate-200">Notes</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="personal" className="space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <FancyInput
                 label="First Name"
                 icon={<User className="w-4 h-4 text-slate-400" />}
-                value={form.firstName || ""}
-                onChange={(v) => setForm((p) => ({ ...p, firstName: v }))}
+                {...register("firstName")}
                 placeholder="Enter first name"
+                error={errors.firstName?.message}
               />
               <FancyInput
                 label="Middle Name"
                 icon={<User className="w-4 h-4 text-slate-400" />}
-                value={form.middleName || ""}
-                onChange={(v) => setForm((p) => ({ ...p, middleName: v }))}
+                {...register("middleName")}
                 placeholder="Enter middle name"
+                error={errors.middleName?.message}
               />
               <FancyInput
                 label="Last Name"
                 icon={<User className="w-4 h-4 text-slate-400" />}
-                value={form.lastName || ""}
-                onChange={(v) => setForm((p) => ({ ...p, lastName: v }))}
+                {...register("lastName")}
                 placeholder="Enter last name"
+                error={errors.lastName?.message}
               />
             </div>
-          </Section>
-
-          {/* Contact */}
-          <Section title="Contact Information" icon={<AtSign className="w-4 h-4 text-green-500" />} index={1}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <FancyInput
-                label="Email Address"
-                type="email"
-                icon={<Mail className="w-4 h-4 text-slate-400" />}
-                value={form.email || ""}
-                onChange={(v) => setForm((p) => ({ ...p, email: v }))}
-                placeholder="user@example.com"
-              />
-              <FancyInput
-                label="Primary Phone"
-                type="tel"
-                icon={<Phone className="w-4 h-4 text-slate-400" />}
-                value={form.phone || ""}
-                onChange={(v) => setForm((p) => ({ ...p, phone: v }))}
-                placeholder="+1 (555) 123-4567"
-              />
-              <FancyInput
-                label="Alternate Phone"
-                type="tel"
-                icon={<Phone className="w-4 h-4 text-slate-400" />}
-                value={form.altPhone || ""}
-                onChange={(v) => setForm((p) => ({ ...p, altPhone: v }))}
-                placeholder="Alternate number"
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <FancyInput
-                label="Street Address"
-                icon={<MapPin className="w-4 h-4 text-slate-400" />}
-                value={form.address?.street || ""}
-                onChange={(v) => setForm((p) => ({ ...p, address: { ...(p.address || {}), street: v } }))}
-                placeholder="123 Main St"
-              />
-              <FancyInput
-                label="City"
-                value={form.address?.city || ""}
-                onChange={(v) => setForm((p) => ({ ...p, address: { ...(p.address || {}), city: v } }))}
-                placeholder="City"
-              />
-              <FancyInput
-                label="State/Province"
-                value={form.address?.state || ""}
-                onChange={(v) => setForm((p) => ({ ...p, address: { ...(p.address || {}), state: v } }))}
-                placeholder="State"
-              />
-              <FancyInput
-                label="Country"
-                value={form.address?.country || ""}
-                onChange={(v) => setForm((p) => ({ ...p, address: { ...(p.address || {}), country: v } }))}
-                placeholder="Country"
-              />
-              <FancyInput
-                label="ZIP/Postal Code"
-                value={form.address?.zip || ""}
-                onChange={(v) => setForm((p) => ({ ...p, address: { ...(p.address || {}), zip: v } }))}
-                placeholder="12345"
-              />
-            </div>
-          </Section>
-
-          {/* Spiritual & Membership */}
-          <Section title="Spiritual Journey & Membership" icon={<Heart className="w-4 h-4 text-purple-500" />} index={2}>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FancySelect
                 label="Gender"
-                value={form.gender || ""}
-                onChange={(v) => setForm((p) => ({ ...p, gender: (v || undefined) as any }))}
+                {...register("gender")}
                 options={[
                   { label: "Select Gender", value: "" },
                   { label: "Male", value: "Male" },
@@ -293,11 +390,85 @@ export default function EditMember() {
                   { label: "Other", value: "Other" },
                 ]}
                 icon={<User className="w-4 h-4 text-slate-400" />}
+                error={errors.gender?.message}
               />
+              <FancyDate
+                label="Date of Birth"
+                value={watch("dob")}
+                onChange={(v) => setValue("dob", v)}
+                icon={<Calendar className="w-4 h-4 text-slate-400" />}
+                error={errors.dob?.message}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="contact" className="space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <FancyInput
+                label="Email Address"
+                type="email"
+                icon={<Mail className="w-4 h-4 text-slate-400" />}
+                {...register("email")}
+                placeholder="user@example.com"
+                error={errors.email?.message}
+              />
+              <FancyInput
+                label="Primary Phone"
+                type="tel"
+                icon={<Phone className="w-4 h-4 text-slate-400" />}
+                {...register("phone")}
+                placeholder="+1 (555) 123-4567"
+                error={errors.phone?.message}
+              />
+              <FancyInput
+                label="Alternate Phone"
+                type="tel"
+                icon={<Phone className="w-4 h-4 text-slate-400" />}
+                {...register("altPhone")}
+                placeholder="Alternate number"
+                error={errors.altPhone?.message}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+              <FancyInput
+                label="Street Address"
+                icon={<MapPin className="w-4 h-4 text-slate-400" />}
+                {...register("address.street")}
+                placeholder="123 Main St"
+                error={errors.address?.street?.message}
+              />
+              <FancyInput
+                label="City"
+                {...register("address.city")}
+                placeholder="City"
+                error={errors.address?.city?.message}
+              />
+              <FancyInput
+                label="State/Province"
+                {...register("address.state")}
+                placeholder="State"
+                error={errors.address?.state?.message}
+              />
+              <FancyInput
+                label="Country"
+                {...register("address.country")}
+                placeholder="Country"
+                error={errors.address?.country?.message}
+              />
+              <FancyInput
+                label="ZIP/Postal Code"
+                {...register("address.zip")}
+                placeholder="12345"
+                error={errors.address?.zip?.message}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="spiritual" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FancySelect
                 label="Membership Status"
-                value={form.membershipStatus || "Active"}
-                onChange={(v) => setForm((p) => ({ ...p, membershipStatus: v as any }))}
+                {...register("membershipStatus")}
                 options={[
                   { label: "Active", value: "Active" },
                   { label: "Visitor", value: "Visitor" },
@@ -305,50 +476,59 @@ export default function EditMember() {
                   { label: "Inactive", value: "Inactive" },
                 ]}
                 icon={<BadgeCheck className="w-4 h-4 text-slate-400" />}
+                error={errors.membershipStatus?.message}
               />
               <FancyDate
                 label="Join Date"
-                value={form.joinDate}
-                onChange={(v) => setForm((p) => ({ ...p, joinDate: v }))}
+                value={watch("joinDate")}
+                onChange={(v) => setValue("joinDate", v)}
                 icon={<Calendar className="w-4 h-4 text-slate-400" />}
+                error={errors.joinDate?.message}
               />
               <FancyInput
                 label="Role/Position"
-                value={form.role || ""}
-                onChange={(v) => setForm((p) => ({ ...p, role: v }))}
+                {...register("role")}
                 placeholder="e.g., Elder, Deacon"
                 icon={<Crown className="w-4 h-4 text-slate-400" />}
+                error={errors.role?.message}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <FancyDate
                 label="Salvation Date"
-                value={form.salvationDate}
-                onChange={(v) => setForm((p) => ({ ...p, salvationDate: v }))}
+                value={watch("salvationDate")}
+                onChange={(v) => setValue("salvationDate", v)}
                 icon={<Heart className="w-4 h-4 text-slate-400" />}
+                error={errors.salvationDate?.message}
               />
               <FancyDate
                 label="Baptism Date"
-                value={form.baptismDate}
-                onChange={(v) => setForm((p) => ({ ...p, baptismDate: v }))}
+                value={watch("baptismDate")}
+                onChange={(v) => setValue("baptismDate", v)}
                 icon={<Zap className="w-4 h-4 text-slate-400" />}
+                error={errors.baptismDate?.message}
               />
               <FancyCheckbox
                 label="Holy Ghost Baptism"
-                checked={!!form.holyGhostBaptism}
-                onChange={(v) => setForm((p) => ({ ...p, holyGhostBaptism: v }))}
+                checked={watch("holyGhostBaptism") || false}
+                onChange={(v) => setValue("holyGhostBaptism", v)}
                 icon={<Zap className="w-4 h-4 text-purple-400" />}
               />
             </div>
-          </Section>
+            <FancyInput
+              label="Invited By"
+              {...register("invitedBy")}
+              placeholder="Name of inviter"
+              icon={<Users className="w-4 h-4 text-slate-400" />}
+              error={errors.invitedBy?.message}
+            />
+          </TabsContent>
 
-          {/* Family */}
-          <Section title="Family Details" icon={<Users className="w-4 h-4 text-pink-500" />} index={3}>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <TabsContent value="family" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <FancySelect
                 label="Marital Status"
-                value={form.maritalStatus || ""}
-                onChange={(v) => setForm((p) => ({ ...p, maritalStatus: (v || undefined) as any }))}
+                {...register("maritalStatus")}
                 options={[
                   { label: "Select Status", value: "" },
                   { label: "Single", value: "Single" },
@@ -357,36 +537,92 @@ export default function EditMember() {
                   { label: "Widowed", value: "Widowed" },
                 ]}
                 icon={<Users className="w-4 h-4 text-slate-400" />}
+                error={errors.maritalStatus?.message}
               />
               <FancyInput
                 label="Spouse Name"
-                value={form.spouseName || ""}
-                onChange={(v) => setForm((p) => ({ ...p, spouseName: v }))}
+                {...register("household.spouse")}
                 placeholder="Full name of spouse"
                 icon={<Users className="w-4 h-4 text-slate-400" />}
+                error={errors.household?.spouse?.message}
               />
               <FancyDate
                 label="Wedding Anniversary"
-                value={form.weddingAnniversary}
-                onChange={(v) => setForm((p) => ({ ...p, weddingAnniversary: v }))}
+                value={watch("weddingAnniversary")}
+                onChange={(v) => setValue("weddingAnniversary", v)}
                 icon={<Heart className="w-4 h-4 text-slate-400" />}
+                error={errors.weddingAnniversary?.message}
               />
               <FancyInput
                 label="Family ID"
-                value={form.familyId || ""}
-                onChange={(v) => setForm((p) => ({ ...p, familyId: v }))}
+                {...register("familyId")}
                 placeholder="Family group ID"
                 icon={<Users className="w-4 h-4 text-slate-400" />}
+                error={errors.familyId?.message}
               />
             </div>
-          </Section>
 
-          {/* Volunteer Groups */}
-          <Section title="Volunteer Groups & Leadership" icon={<CheckSquare className="w-4 h-4 text-amber-500" />} index={4}>
+            {/* Children */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">Children</h3>
+                <motion.button
+                  type="button"
+                  onClick={() => append({ name: "", dob: undefined })}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#8B0000] to-[#D4AF37] text-white text-sm shadow-sm hover:shadow-md transition"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  Add Child
+                </motion.button>
+              </div>
+              <AnimatePresence>
+                {fields.map((field, index) => (
+                  <motion.div
+                    key={field.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-50/50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50"
+                  >
+                    <FancyInput
+                      label={`Child Name`}
+                      {...register(`household.children.${index}.name` as const)}
+                      placeholder="Child's name"
+                      error={errors.household?.children?.[index]?.name?.message}
+                    />
+                    <FancyDate
+                      label="DOB"
+                      value={watch(`household.children.${index}.dob` as const)}
+                      onChange={(v) => setValue(`household.children.${index}.dob` as const, v)}
+                      icon={<Calendar className="w-4 h-4 text-slate-400" />}
+                      error={errors.household?.children?.[index]?.dob?.message}
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => remove(index)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="col-span-1 md:col-span-3 mt-2 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-800/20 transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove
+                    </motion.button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+              {fields.length === 0 && (
+                <p className="text-sm text-slate-500 italic text-center py-4">No children added.</p>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="volunteer" className="space-y-6">
             <div className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 {groups.map((g) => {
-                  const active = (form.volunteerGroups || []).includes(g._id);
+                  const active = (watch("volunteerGroups") || []).includes(g._id);
                   return (
                     <motion.button
                       key={g._id}
@@ -425,280 +661,20 @@ export default function EditMember() {
                   </motion.button>
                 ))}
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 italic">Toggle groups to add/remove membership. Assign leadership with buttons above.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic">Toggle groups to add/remove. Assign leadership above.</p>
             </div>
-          </Section>
+          </TabsContent>
 
-          {/* Notes */}
-          <Section title="Additional Notes" icon={<FileText className="w-4 h-4 text-gray-500" />} index={5}>
+          <TabsContent value="notes" className="space-y-6">
             <FancyTextarea
-              value={form.notes || ""}
-              onChange={(v) => setForm((p) => ({ ...p, notes: v }))}
+              {...register("notes")}
               placeholder="Enter any additional notes or comments..."
               icon={<Edit3 className="w-4 h-4 text-slate-400 absolute left-3 top-3 opacity-50" />}
+              error={errors.notes?.message}
             />
-          </Section>
-
-          {/* Photo Placeholder (Optional Enhancement) */}
-          <Section title="Profile Photo" icon={<Image className="w-4 h-4 text-indigo-500" />} index={6}>
-            <div className="flex items-center justify-center p-8 border-2 border-dashed border-slate-200/50 dark:border-slate-700/50 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 text-slate-500 dark:text-slate-400">
-              <div className="text-center">
-                <Image className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Upload or update profile photo</p>
-                <p className="text-xs mt-1">Current: {member.photoUrl ? "Uploaded" : "None"}</p>
-              </div>
-            </div>
-          </Section>
-
-          {/* Submit */}
-          <motion.footer
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="flex justify-end pt-4"
-          >
-            <motion.button
-              type="submit"
-              disabled={submitting}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:cursor-not-allowed disabled:shadow-md"
-              style={{
-                background: submitting
-                  ? "linear-gradient(135deg, #6B7280, #9CA3AF)"
-                  : "linear-gradient(135deg, #8B0000, #D4AF37)",
-              }}
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Changes
-                </>
-              )}
-            </motion.button>
-          </motion.footer>
-        </motion.form>
+          </TabsContent>
+        </Tabs>
       </motion.div>
     </div>
-  );
-}
-
-/* ------- Enhanced UI Components ------- */
-
-function Section({
-  title,
-  icon,
-  children,
-  index,
-}: {
-  title: string;
-  icon?: React.ReactNode;
-  children?: React.ReactNode;
-  index?: number;
-}) {
-  return (
-    <motion.section
-      variants={sectionVariants}
-      initial="hidden"
-      animate="visible"
-      custom={index}
-      className="relative overflow-hidden rounded-2xl bg-white/80 dark:bg-slate-800/70 backdrop-blur-xl border border-slate-200/40 dark:border-slate-700/40 shadow-sm hover:shadow-md transition-all duration-300 p-6"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/20 dark:via-slate-900/20 to-transparent pointer-events-none" />
-      <div className="relative flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center">
-          {icon}
-        </div>
-        <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">{title}</h2>
-      </div>
-      {children}
-    </motion.section>
-  );
-}
-
-function FancyInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  icon,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <label className="block relative space-y-1">
-      <span className="block text-sm font-medium text-slate-600 dark:text-slate-300">{label}</span>
-      <motion.div
-        className="relative"
-        variants={inputVariants}
-        whileFocus="focus"
-        whileHover="hover"
-      >
-        {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-            {icon}
-          </div>
-        )}
-        <input
-          type={type}
-          className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-700/30 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:border-[#8B0000] focus:ring-2 focus:ring-[#8B0000]/20 focus:bg-white dark:focus:bg-slate-700/50 transition-all duration-200"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-        />
-      </motion.div>
-    </label>
-  );
-}
-
-function FancySelect({
-  label,
-  value,
-  onChange,
-  options,
-  icon,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { label: string; value: string }[];
-  icon?: React.ReactNode;
-}) {
-  return (
-    <label className="block relative space-y-1">
-      <span className="block text-sm font-medium text-slate-600 dark:text-slate-300">{label}</span>
-      <motion.div
-        className="relative"
-        variants={inputVariants}
-        whileFocus="focus"
-        whileHover="hover"
-      >
-        {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-            {icon}
-          </div>
-        )}
-        <select
-          className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-700/30 text-slate-800 dark:text-slate-200 focus:border-[#8B0000] focus:ring-2 focus:ring-[#8B0000]/20 focus:bg-white dark:focus:bg-slate-700/50 transition-all duration-200 appearance-none bg-no-repeat bg-right pr-10"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        >
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-400">
-          ▼
-        </div>
-      </motion.div>
-    </label>
-  );
-}
-
-function FancyDate({
-  label,
-  value,
-  onChange,
-  icon,
-}: {
-  label: string;
-  value?: Date | string;
-  onChange: (v?: Date) => void;
-  icon?: React.ReactNode;
-}) {
-  const str = useMemo(() => (value ? new Date(value).toISOString().slice(0, 10) : ""), [value]);
-  return (
-    <label className="block relative space-y-1">
-      <span className="block text-sm font-medium text-slate-600 dark:text-slate-300">{label}</span>
-      <motion.div
-        className="relative"
-        variants={inputVariants}
-        whileFocus="focus"
-        whileHover="hover"
-      >
-        {icon && (
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-            {icon}
-          </div>
-        )}
-        <input
-          type="date"
-          className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-700/30 text-slate-800 dark:text-slate-200 focus:border-[#8B0000] focus:ring-2 focus:ring-[#8B0000]/20 focus:bg-white dark:focus:bg-slate-700/50 transition-all duration-200"
-          value={str}
-          onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : undefined)}
-        />
-      </motion.div>
-    </label>
-  );
-}
-
-function FancyCheckbox({
-  label,
-  checked,
-  onChange,
-  icon,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <motion.label
-      className="inline-flex items-center gap-3 p-3 rounded-xl bg-white/50 dark:bg-slate-700/30 border border-slate-200/50 dark:border-slate-700/50 cursor-pointer hover:bg-white/70 dark:hover:bg-slate-700/50 transition-all"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {icon && <div className="opacity-50">{icon}</div>}
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="w-5 h-5 text-[#8B0000] bg-white/50 dark:bg-slate-700/30 border-2 border-slate-300 dark:border-slate-600 rounded focus:ring-[#8B0000] focus:ring-2 transition-all"
-      />
-      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
-    </motion.label>
-  );
-}
-
-function FancyTextarea({
-  value,
-  onChange,
-  placeholder,
-  icon,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <motion.div
-      className="relative"
-      variants={inputVariants}
-      whileFocus="focus"
-      whileHover="hover"
-    >
-      {icon}
-      <textarea
-        className="w-full pl-10 pt-10 pr-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-white/50 dark:bg-slate-700/30 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:border-[#8B0000] focus:ring-2 focus:ring-[#8B0000]/20 focus:bg-white dark:focus:bg-slate-700/50 transition-all duration-200 resize-none"
-        rows={5}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-    </motion.div>
   );
 }

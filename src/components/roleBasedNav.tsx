@@ -62,6 +62,7 @@ export const roleBasedNav = {
         { name: "Volunteers", icon: UserPlus, to: "/dashboard/volunteers" },
         { name: "Events", icon: Calendar, to: "/dashboard/events" },
         { name: "Reports", icon: FileText, to: "/dashboard/analytics/attendance" },
+        { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
       ]
     },
     { 
@@ -87,6 +88,7 @@ export const roleBasedNav = {
         { name: "Districts", icon: MapPin, to: "/dashboard/districts" },
         { name: "Reports", icon: BarChart3, to: "/dashboard/reports" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
+         { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
       ]
     },
 
@@ -108,6 +110,7 @@ export const roleBasedNav = {
       children: [
         { name: "Churches", icon: Building2, to: "/dashboard/churches" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
+         { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
       ]
     },
 
@@ -142,6 +145,7 @@ export const roleBasedNav = {
         { name: "Volunteers", icon: UserPlus, to: "/dashboard/volunteers" },
         { name: "Events", icon: Calendar, to: "/dashboard/events" },
         { name: "Reports", icon: FileText, to: "/dashboard/analytics/attendance" },
+        { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
       ]
     },
     { 
@@ -175,6 +179,8 @@ export const roleBasedNav = {
     {
       name: "Pastors", icon: UserPlus, to: "/dashboard/pastors", type: "link" as const
     },
+
+     { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
 
     {
       name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const

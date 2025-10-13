@@ -34,6 +34,10 @@ import PastorsListPage from "../api/features/pastors/pages/PastorsListPage";
 import PastorDetailPage from "../api/features/pastors/pages/PastorDetailPage";
 import PastorCreatePage from "../api/features/pastors/pages/PastorCreatePage";
 
+import FollowUpListPage from "../api/features/followup/pages/FollowUpListPage";
+import FollowUpCaseDetailPage from "../api/features/followup/pages/FollowUpCaseDetailPage";
+
+
 const router = createBrowserRouter([
  
   {
@@ -98,6 +102,11 @@ const router = createBrowserRouter([
       { path: "pastors", element: <PastorsListPage /> },
       { path: "pastors/new", element: <PastorCreatePage /> },
       { path: "pastors/:id", element: <PastorDetailPage /> },
+
+      //   follow up 
+
+      { path: "follow-up", element: <AnimatedPageWrapper><FollowUpListPage /></AnimatedPageWrapper> },
+      { path: "followup/:id", element: <AnimatedPageWrapper><FollowUpCaseDetailPage /></AnimatedPageWrapper> },
     ],
   },
 ]);
