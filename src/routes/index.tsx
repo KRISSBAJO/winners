@@ -36,7 +36,7 @@ import PastorCreatePage from "../api/features/pastors/pages/PastorCreatePage";
 
 import FollowUpListPage from "../api/features/followup/pages/FollowUpListPage";
 import FollowUpCaseDetailPage from "../api/features/followup/pages/FollowUpCaseDetailPage";
-
+import OpenFollowUpPage from "../api/features/followup/pages/OpenFollowUpPage";
 
 const router = createBrowserRouter([
  
@@ -106,6 +106,7 @@ const router = createBrowserRouter([
       //   follow up 
 
       { path: "follow-up", element: <AnimatedPageWrapper><FollowUpListPage /></AnimatedPageWrapper> },
+      { path: "followup/open", element: <AnimatedPageWrapper><OpenFollowUpPage /></AnimatedPageWrapper> },
       { path: "followup/:id", element: <AnimatedPageWrapper><FollowUpCaseDetailPage /></AnimatedPageWrapper> },
     ],
   },

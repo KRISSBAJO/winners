@@ -1,6 +1,15 @@
 import apiClient from "../../../../lib/apiClient";
 import type { Member, CreateMemberInput, UpdateMemberInput } from "../types/memberTypes";
 
+export type MemberSearchRow = {
+  _id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+};
+export type MemberSearchPage = { items: MemberSearchRow[]; nextCursor?: string };
+
 export type SelfRegKind = "short" | "long";
 export type VerifySelfRegResponse = { email: string; churchId: string; kind: SelfRegKind };
 
@@ -89,5 +98,9 @@ export const memberService = {
   selfRegisterLong: async (token: string, payload: Partial<Member>) => {
     const { data } = await apiClient.post("/members/self-register/long", { token, ...payload });
     return data as Member;
+  },
+  async searchMembers(params: { churchId?: string; q?: string; limit?: number; cursor?: string }) {
+    const { data } = await apiClient.get<MemberSearchPage>("/members/search", { params });
+    return data;
   },
 };

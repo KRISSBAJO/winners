@@ -111,6 +111,17 @@ export const useCadence = (id: string) => {
   };
 };
 
+export const useCadenceList = () =>
+  useQuery({
+    queryKey: ["followup", "cadences"],
+    queryFn: async () => {
+      const res: { items?: { _id: string; name: string; type?: string; steps?: any[] }[] } = { items: await followupService.cadences.list() };
+      // normalize to array
+      return Array.isArray(res) ? res : (res.items ?? []);
+    },
+    staleTime: 60_000,
+  });
+
 export const useAttempts = (id: string) =>
   useQuery<ContactAttempt[]>({
     queryKey: ["followup", id, "attempts"],
@@ -121,8 +132,11 @@ export const useAttempts = (id: string) =>
 export const useLogAttempt = (id: string) => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { id: string; data: { channel: ContactAttempt["channel"]; outcome: ContactAttempt["outcome"]; content?: string; nextActionOn?: string } }) =>
-      followupService.attempts.log(payload.id, payload.data),
+    mutationFn: (p: {
+      id: string;
+      data?: { channel: ContactAttempt["channel"]; outcome: ContactAttempt["outcome"]; content?: string; nextActionOn?: string };
+      payload?: { channel: ContactAttempt["channel"]; outcome: ContactAttempt["outcome"]; content?: string; nextActionOn?: string };
+    }) => followupService.attempts.log(p.id, p.data ?? p.payload!),
     onSuccess: () => {
       toast.success("Attempt logged");
       qc.invalidateQueries({ queryKey: ["followup", id, "attempts"] });
@@ -130,4 +144,29 @@ export const useLogAttempt = (id: string) => {
     },
     onError: (e: any) => toast.error(e?.response?.data?.message || e.message),
   });
+};
+
+
+export const useTags = (id: string) => {
+  const qc = useQueryClient();
+  return {
+    add: useMutation({
+      mutationFn: (tag: string) => followupService.addTag(id, tag),
+      onSuccess: () => {
+        toast.success("Tag added");
+        qc.invalidateQueries({ queryKey: ["followup", id] });
+        qc.invalidateQueries({ queryKey: ["followup", "list"] });
+      },
+      onError: (e: any) => toast.error(e?.response?.data?.message || e.message),
+    }),
+    remove: useMutation({
+      mutationFn: (tag: string) => followupService.removeTag(id, tag),
+      onSuccess: () => {
+        toast.success("Tag removed");
+        qc.invalidateQueries({ queryKey: ["followup", id] });
+        qc.invalidateQueries({ queryKey: ["followup", "list"] });
+      },
+      onError: (e: any) => toast.error(e?.response?.data?.message || e.message),
+    }),
+  };
 };

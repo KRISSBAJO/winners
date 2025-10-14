@@ -1,9 +1,9 @@
 // src/api/features/followup/pages/FollowUpListPage.tsx
 import { useMemo, useState } from "react";
+
 import { motion } from "framer-motion";
 import { Plus, Filter, Users } from "lucide-react";
 import { useFollowupList, useFollowupStats } from "../hooks/useFollowup";
-import OpenFollowUpModal from "../components/OpenFollowUpModal";
 import { Link } from "react-router-dom";
 import { BRAND_RED, BRAND_GOLD } from "../ui/theme";
 
@@ -11,7 +11,6 @@ export default function FollowUpListPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("");
   const [type, setType] = useState<string>("");
-  const [open, setOpen] = useState(false);
 
   const { data, isLoading } = useFollowupList({ q, status, type, page: 1, limit: 50, sort: "recent" });
   const stats = useFollowupStats();
@@ -31,13 +30,14 @@ export default function FollowUpListPage() {
         <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">
           <Users className="inline-block w-7 h-7 -mt-1 mr-2" /> Follow-Up
         </h1>
-        <button
-          onClick={()=>setOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-semibold shadow-md"
-          style={{ background: `linear-gradient(135deg, ${BRAND_RED}, ${BRAND_GOLD})` }}
+        <Link
+        to="/dashboard/followup/open"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-semibold shadow-md"
+        style={{ background: `linear-gradient(135deg, ${BRAND_RED}, ${BRAND_GOLD})` }}
         >
-          <Plus size={16}/> Open Case
-        </button>
+        <Plus size={16}/> Open Case
+        </Link>
+
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -126,8 +126,6 @@ export default function FollowUpListPage() {
           </table>
         </motion.div>
       </div>
-
-      <OpenFollowUpModal open={open} onClose={()=>setOpen(false)} />
     </div>
   );
 }

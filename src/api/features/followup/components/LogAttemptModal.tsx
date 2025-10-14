@@ -66,6 +66,7 @@ export default function LogAttemptModal({
             <div className="flex justify-end mt-4">
               <button
                 onClick={async ()=>{
+                  
                   await m.mutateAsync({
                     id: caseId,
                     payload: { channel, outcome, content, nextActionOn: next || undefined },

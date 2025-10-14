@@ -1,4 +1,4 @@
-// src/api/features/users/hooks/useUsers.ts
+// src/api/features/users/hooks/useUsersByChurch.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { userService, UpdateProfileInput, CreateUserInput, AdminUpdateInput } from "../services/userService";
 import type { User } from "../../auth/types/authTypes";

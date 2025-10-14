@@ -70,6 +70,12 @@ export const followupService = {
     const { data } = await apiClient.post(`/followup/${id}/cadence/advance`, {});
     return data;
   },
+  cadences: {
+    list: async (): Promise<Array<{_id:string; name:string; type?:string; steps?: any[]}>> => {
+      const { data } = await apiClient.get("/followup/cadences");
+      return data;
+    },
+  },
   attempts: {
     list: async (id: string): Promise<ContactAttempt[]> => {
       const { data } = await apiClient.get(`/followup/${id}/attempts`);

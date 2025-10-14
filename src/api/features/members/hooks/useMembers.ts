@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { memberService } from "../services/memberService";
 import type { Member, CreateMemberInput, UpdateMemberInput } from "../types/memberTypes";
+import {  MemberSearchRow, MemberSearchPage } from "../services/memberService";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 /* lists */
@@ -141,4 +143,15 @@ export const useRegisterMemberWithToken = () =>
   useMutation({
     mutationFn: ({ token, payload }: { token: string; payload: Partial<Member> }) =>
       memberService.registerWithToken(token, payload),
+  });
+
+  export const useMemberSearchInfinite = (churchId?: string, q: string = "", limit = 30) =>
+  useInfiniteQuery<MemberSearchPage>({
+    queryKey: ["member-search", churchId, q, limit],
+    enabled: !!churchId,           // only search when church is chosen
+    queryFn: ({ pageParam }) =>
+      memberService.searchMembers({ churchId, q, limit, cursor: pageParam as string | undefined }),
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    initialPageParam: undefined,   // Set the initial page parameter (can be null or undefined)
+    staleTime: 30_000,
   });
