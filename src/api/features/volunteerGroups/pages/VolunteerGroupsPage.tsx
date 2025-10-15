@@ -13,6 +13,7 @@ import {
   Map,
   Church as ChurchIcon,
   X,
+  ArrowUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -58,6 +59,8 @@ export default function VolunteerGroupsPage() {
 
   // ---- Local UI state
   const [q, setQ] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [openModal, setOpenModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [drawerId, setDrawerId] = useState<string | null>(null);
@@ -70,11 +73,23 @@ export default function VolunteerGroupsPage() {
 
   const filteredGroups = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return groups;
     return groups.filter((g: any) =>
       [g.name, g.description].filter(Boolean).some((v) => String(v).toLowerCase().includes(term))
-    );
-  }, [groups, q]);
+    ).sort((a: any, b: any) => {
+      if (sortBy === "name") {
+        return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      }
+      if (sortBy === "members") {
+        return sortDir === "asc" ? (a.members?.length ?? 0) - (b.members?.length ?? 0) : (b.members?.length ?? 0) - (a.members?.length ?? 0);
+      }
+      return 0;
+    });
+  }, [groups, q, sortBy, sortDir]);
+
+  const overallTotals = useMemo(() => ({
+    totalGroups: filteredGroups.length,
+    totalMembers: filteredGroups.reduce((sum, g) => sum + (g.members?.length ?? 0), 0),
+  }), [filteredGroups]);
 
   const selectedGroup = useMemo(() => groups.find((g: any) => g._id === drawerId), [groups, drawerId]);
 
@@ -228,51 +243,70 @@ export default function VolunteerGroupsPage() {
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200/70 dark:border-white/10 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-500">
-              <tr>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Description</th>
-                <th className="px-4 py-3 text-left">Leader</th>
-                <th className="px-4 py-3 text-left">Members</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+          <table className="min-w-full text-sm divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-600 sticky top-0 z-10 shadow-sm">
+              <tr className="divide-x divide-slate-200 dark:divide-slate-700">
+                <th className="px-6 py-4 text-left font-semibold">Name</th>
+                <th className="px-6 py-4 text-left font-semibold">Description</th>
+                <th className="px-6 py-4 text-left font-semibold">Leader</th>
+                <th className="px-6 py-4 text-left font-semibold">Members</th>
+                <th className="px-6 py-4 text-right font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {isLoading && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-500">Loading…</td></tr>
+                <tr><td colSpan={5} className="px-6 py-6 text-center text-slate-500">Loading…</td></tr>
               )}
               {!isLoading && filteredGroups.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-500">No groups.</td></tr>
+                <tr><td colSpan={5} className="px-6 py-6 text-center text-slate-500">No groups.</td></tr>
               )}
-              {filteredGroups.map((g: any) => (
-                <tr key={g._id} className="border-t border-slate-100 dark:border-white/5 hover:bg-slate-50/50 dark:hover:bg-white/5">
-                  <td className="px-4 py-3">
+              {filteredGroups.map((g: any, i) => (
+                <motion.tr 
+                  key={g._id} 
+                  className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-200 divide-x divide-slate-100 dark:divide-white/5 ${
+                    i % 2 === 0 ? 'bg-white/70 dark:bg-slate-900/30' : ''
+                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.02 }}
+                >
+                  <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">
                     <button className="font-medium hover:underline" onClick={() => setDrawerId(g._id)}>
                       {g.name}
                     </button>
                   </td>
-                  <td className="px-4 py-3">{g.description || "—"}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
+                    {g.description || "—"}
+                  </td>
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
                     <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300">
                       <Crown className="w-4 h-4 text-amber-500" />
                       {renderMemberName(members, g.leaderId) || "—"}
                     </span>
                   </td>
-                  <td className="px-4 py-3">{g.members?.length ?? 0}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4 text-right tabular-nums font-medium text-slate-700 dark:text-slate-300">{g.members?.length ?? 0}</td>
+                  <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => startEdit(g)} className="px-2 py-1 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100">
+                      <button onClick={() => startEdit(g)} className="p-2 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 transition" title="Edit">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <button onClick={() => removeGroup(g._id)} className="px-2 py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100">
+                      <button onClick={() => removeGroup(g._id)} className="p-2 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition" title="Delete">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
+            <tfoot className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 font-semibold sticky bottom-0 z-10 shadow-md">
+              <tr className="divide-x divide-slate-200 dark:divide-slate-700">
+                <td className="px-6 py-4 text-left">Totals</td>
+                <td className="px-6 py-4 text-left">—</td>
+                <td className="px-6 py-4 text-left">—</td>
+                <td className="px-6 py-4 text-right tabular-nums font-bold bg-slate-100/50 dark:bg-slate-700/30">{overallTotals.totalMembers.toLocaleString()}</td>
+                <td className="px-6 py-4 text-right">—</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>

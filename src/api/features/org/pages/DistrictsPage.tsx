@@ -1,6 +1,17 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Map, Plus, Pencil, Trash2, Search, Eye, Mail, Phone, Building2 } from "lucide-react";
+import {
+  Map,
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Eye,
+  Mail,
+  Phone,
+  Building2,
+  X,
+} from "lucide-react";
 import {
   useNationalList,
   useDistrictsByNational,
@@ -10,6 +21,8 @@ import {
 } from "../../org/hooks/useOrg";
 import { useAuthStore } from "../../../../api/features/auth/store/useAuthStore";
 import { toast } from "sonner";
+
+/* -------------------- Types -------------------- */
 
 type Address = { street?: string; city?: string; state?: string; country?: string; zip?: string };
 
@@ -42,9 +55,15 @@ type FormValues = {
   address?: Address;
 };
 
-function emptyAddr(): Address {
-  return { street: "", city: "", state: "", country: "", zip: "" };
-}
+/* -------------------- Utils -------------------- */
+
+const BRAND_GRADIENT = "linear-gradient(135deg,#8B0000,#D4AF37)";
+
+const emptyAddr = (): Address => ({ street: "", city: "", state: "", country: "", zip: "" });
+
+/* =========================================================
+   DistrictsPage — redesigned to match ChurchesPage styling
+   ========================================================= */
 
 export default function DistrictsPage() {
   const { user, scope } = useAuthStore();
@@ -52,8 +71,8 @@ export default function DistrictsPage() {
 
   // Data
   const { data: nationals = [] } = useNationalList();
-  const [selectedNational, setSelectedNational] = useState(scope.nationalChurchId || "");
-  const { data: districts = [], isLoading } = useDistrictsByNational(selectedNational || undefined);
+  const [nationalId, setNationalId] = useState(scope.nationalChurchId || "");
+  const { data: districts = [], isLoading } = useDistrictsByNational(nationalId || undefined);
 
   // CRUD
   const createMutation = useCreateDistrict();
@@ -65,23 +84,22 @@ export default function DistrictsPage() {
   const [openForm, setOpenForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormValues>({
-    nationalChurchId: selectedNational || "",
+    nationalChurchId: nationalId || "",
     name: "",
     code: "",
     districtPastor: "",
     address: emptyAddr(),
   });
 
-  // Details drawer state
-  const [openView, setOpenView] = useState(false);
-  const [viewRow, setViewRow] = useState<Row | null>(null);
+  // Drawer
+  const [drawerId, setDrawerId] = useState<string | null>(null);
 
-  // ---------- helpers for mixed type nationalChurchId ----------
-  const getNatId = (nat: NationalLite | undefined) =>
-    !nat ? "" : typeof nat === "string" ? nat : nat._id;
-
+  // Helpers for mixed type national
+  const getNatId = (nat: NationalLite | undefined) => (!nat ? "" : typeof nat === "string" ? nat : nat._id);
   const getNatName = (nat: NationalLite | undefined) =>
-    !nat ? "—" : typeof nat === "string"
+    !nat
+      ? "—"
+      : typeof nat === "string"
       ? nationals.find((n: any) => n._id === nat)?.name ?? "—"
       : nat.name ?? "—";
 
@@ -96,19 +114,21 @@ export default function DistrictsPage() {
     );
   }, [districts, query, nationals]);
 
-  const resetForm = () => {
+  const selectedRow: Row | undefined = useMemo(
+    () => (districts as Row[]).find((d) => d._id === drawerId),
+    [districts, drawerId]
+  );
+
+  // Actions
+  const startCreate = () => {
     setEditingId(null);
     setForm({
-      nationalChurchId: selectedNational || "",
+      nationalChurchId: nationalId || "",
       name: "",
       code: "",
       districtPastor: "",
       address: emptyAddr(),
     });
-  };
-
-  const startCreate = () => {
-    resetForm();
     setOpenForm(true);
   };
 
@@ -130,11 +150,6 @@ export default function DistrictsPage() {
     setOpenForm(true);
   };
 
-  const openDetails = (row: Row) => {
-    setViewRow(row);
-    setOpenView(true);
-  };
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nationalChurchId) {
@@ -150,7 +165,6 @@ export default function DistrictsPage() {
         toast.success("District created.");
       }
       setOpenForm(false);
-      resetForm();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || "Operation failed");
     }
@@ -161,6 +175,7 @@ export default function DistrictsPage() {
     try {
       await deleteMutation.mutateAsync(id);
       toast.success("District deleted");
+      if (drawerId === id) setDrawerId(null);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || "Delete failed");
     }
@@ -174,18 +189,18 @@ export default function DistrictsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
-            <Map className="w-5 h-5 text-amber-600" /> Districts Management
+            <Map className="w-5 h-5 text-amber-600" />
+            Districts Management
           </h1>
-          <p className="text-sm text-slate-500">
-            Filter by national church, then manage districts.
-          </p>
+          <p className="text-sm text-slate-500">Filter by National to manage districts.</p>
         </div>
 
         {canManage && (
           <button
             onClick={startCreate}
-            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-white shadow-md"
-            style={{ background: "linear-gradient(135deg,#8B0000,#D4AF37)" }}
+            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-white shadow-md disabled:opacity-60"
+            disabled={!nationalId}
+            style={{ background: BRAND_GRADIENT }}
           >
             <Plus className="w-4 h-4" /> New District
           </button>
@@ -193,23 +208,21 @@ export default function DistrictsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <select
-          className="px-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70"
-          value={selectedNational}
-          onChange={(e) => setSelectedNational(e.target.value)}
-        >
-          <option value="">Select national…</option>
-          {nationals.map((n: any) => (
-            <option key={n._id} value={n._id}>{n.name}</option>
-          ))}
-        </select>
-
-        <div className="relative sm:ml-auto sm:w-64">
+      <div className="grid sm:grid-cols-3 gap-3">
+        <Select
+          icon={<Building2 className="w-4 h-4 text-slate-400" />}
+          value={nationalId}
+          onChange={setNationalId}
+          options={[
+            { label: "Select national…", value: "" },
+            ...nationals.map((n: any) => ({ label: n.name, value: n._id })),
+          ]}
+        />
+        <div className="relative sm:col-span-2">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
           <input
             className="w-full pl-9 pr-3 py-2 border rounded-lg bg-white/90 dark:bg-slate-800/70"
-            placeholder="Search district…"
+            placeholder="Search districts…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -219,39 +232,61 @@ export default function DistrictsPage() {
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200/70 dark:border-white/10 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-500">
-              <tr>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Code</th>
-                <th className="px-4 py-3 text-left">Pastor</th>
-                <th className="px-4 py-3 text-left">National</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+          <table className="min-w-full text-sm divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-600 sticky top-0 z-10 shadow-sm">
+              <tr className="divide-x divide-slate-200 dark:divide-slate-700">
+                <th className="px-6 py-4 text-left font-semibold">Name</th>
+                <th className="px-6 py-4 text-left font-semibold">Code</th>
+                <th className="px-6 py-4 text-left font-semibold">District Pastor</th>
+                <th className="px-6 py-4 text-left font-semibold">National</th>
+                <th className="px-6 py-4 text-right font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {isLoading && (
-                <tr><td className="px-4 py-6 text-center text-slate-500" colSpan={5}>Loading…</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-6 py-6 text-center text-slate-500">
+                    Loading…
+                  </td>
+                </tr>
               )}
+
               {!isLoading && filtered.length === 0 && (
-                <tr><td className="px-4 py-6 text-center text-slate-500" colSpan={5}>No districts.</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-6 py-6 text-center text-slate-500">
+                    No districts.
+                  </td>
+                </tr>
               )}
-              {filtered.map((d: Row) => (
-                <tr key={d._id} className="border-t border-slate-100 dark:border-white/5 hover:bg-slate-50/50 dark:hover:bg-white/5">
-                  <td className="px-4 py-3">{d.name}</td>
-                  <td className="px-4 py-3">{d.code}</td>
-                  <td className="px-4 py-3">{d.districtPastor}</td>
-                  <td className="px-4 py-3">
+
+              {filtered.map((d: Row, i) => (
+                <motion.tr
+                  key={d._id}
+                  className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-200 divide-x divide-slate-100 dark:divide-white/5 ${
+                    i % 2 === 0 ? "bg-white/70 dark:bg-slate-900/30" : ""
+                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.02 }}
+                >
+                  <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">
+                    <button className="hover:underline" onClick={() => setDrawerId(d._id)}>
+                      {d.name}
+                    </button>
+                  </td>
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{d.code}</td>
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{d.districtPastor}</td>
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
                     <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs bg-amber-50 text-amber-700">
                       <Building2 className="w-3 h-3" />
                       {getNatName(d.nationalChurchId)}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => openDetails(d)}
-                        className="px-2 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100"
+                        onClick={() => setDrawerId(d._id)}
+                        className="p-2 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100 transition"
                         title="View"
                       >
                         <Eye className="w-4 h-4" />
@@ -260,14 +295,14 @@ export default function DistrictsPage() {
                         <>
                           <button
                             onClick={() => startEdit(d)}
-                            className="px-2 py-1 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100"
+                            className="p-2 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 transition"
                             title="Edit"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => remove(d._id)}
-                            className="px-2 py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100"
+                            className="p-2 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -276,7 +311,7 @@ export default function DistrictsPage() {
                       )}
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
@@ -288,45 +323,64 @@ export default function DistrictsPage() {
         {openForm && (
           <motion.div
             className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
             <motion.form
               onSubmit={submit}
-              initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
               className="w-full max-w-xl rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4 border border-white/10"
             >
-              <h3 className="text-lg font-semibold">{editingId ? "Edit District" : "Create District"}</h3>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <label className="block">
-                  <span className="text-sm">National Church</span>
-                  <select
-                    className="mt-1 w-full px-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70"
-                    value={form.nationalChurchId}
-                    onChange={(e) => setForm((p) => ({ ...p, nationalChurchId: e.target.value }))}
-                  >
-                    <option value="">Select national…</option>
-                    {nationals.map((n: any) => (
-                      <option key={n._id} value={n._id}>{n.name}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <TextField label="Name" value={form.name} onChange={(v) => setForm((p) => ({ ...p, name: v }))} />
-                <TextField label="Code" value={form.code} onChange={(v) => setForm((p) => ({ ...p, code: v }))} />
-                <TextField label="District Pastor" value={form.districtPastor} onChange={(v) => setForm((p) => ({ ...p, districtPastor: v }))} />
+              <div className="flex items-start justify-between">
+                <h3 className="text-lg font-semibold">
+                  {editingId ? "Edit District" : "Create District"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setOpenForm(false)}
+                  className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/10"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="grid sm:grid-cols-3 gap-4">
-                <TextField label="City" value={form.address?.city ?? ""} onChange={(v) =>
-                  setForm((p) => ({ ...p, address: { ...(p.address ?? {}), city: v } }))
-                } />
-                <TextField label="State" value={form.address?.state ?? ""} onChange={(v) =>
-                  setForm((p) => ({ ...p, address: { ...(p.address ?? {}), state: v } }))
-                } />
-                <TextField label="Country" value={form.address?.country ?? ""} onChange={(v) =>
-                  setForm((p) => ({ ...p, address: { ...(p.address ?? {}), country: v } }))
-                } />
+              <div className="grid gap-4">
+                <Select
+                  label="National Church"
+                  value={form.nationalChurchId}
+                  onChange={(v) => setForm((p) => ({ ...p, nationalChurchId: v }))}
+                  options={[
+                    { label: "Select national…", value: "" },
+                    ...nationals.map((n: any) => ({ label: n.name, value: n._id })),
+                  ]}
+                />
+                <Text label="Name" value={form.name} onChange={(v) => setForm((p) => ({ ...p, name: v }))} />
+                <Text label="Code" value={form.code} onChange={(v) => setForm((p) => ({ ...p, code: v }))} />
+                <Text
+                  label="District Pastor"
+                  value={form.districtPastor}
+                  onChange={(v) => setForm((p) => ({ ...p, districtPastor: v }))}
+                />
+                <div className="grid sm:grid-cols-3 gap-4">
+                  <Text
+                    label="City"
+                    value={form.address?.city ?? ""}
+                    onChange={(v) => setForm((p) => ({ ...p, address: { ...(p.address ?? {}), city: v } }))}
+                  />
+                  <Text
+                    label="State"
+                    value={form.address?.state ?? ""}
+                    onChange={(v) => setForm((p) => ({ ...p, address: { ...(p.address ?? {}), state: v } }))}
+                  />
+                  <Text
+                    label="Country"
+                    value={form.address?.country ?? ""}
+                    onChange={(v) => setForm((p) => ({ ...p, address: { ...(p.address ?? {}), country: v } }))}
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
@@ -341,7 +395,7 @@ export default function DistrictsPage() {
                 <button
                   type="submit"
                   className="px-4 py-2 rounded-lg text-white shadow-md disabled:opacity-70"
-                  style={{ background: "linear-gradient(135deg,#8B0000,#D4AF37)" }}
+                  style={{ background: BRAND_GRADIENT }}
                   disabled={submitting}
                 >
                   {submitting ? "Saving..." : editingId ? "Save Changes" : "Create"}
@@ -352,64 +406,81 @@ export default function DistrictsPage() {
         )}
       </AnimatePresence>
 
-      {/* View Drawer */}
+      {/* Details Drawer */}
       <AnimatePresence>
-        {openView && viewRow && (
+        {drawerId && selectedRow && (
           <motion.aside
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl z-50 border-l border-white/10 p-6 overflow-y-auto"
-            initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 120, damping: 18 }}
+            initial={{ x: 420, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 420, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 26 }}
+            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-lg bg-white dark:bg-slate-900 border-l border-slate-200/70 dark:border-white/10 p-6 overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Map className="w-5 h-5 text-amber-600" /> District Details
-              </h3>
-              <button onClick={() => setOpenView(false)} className="text-slate-500 hover:text-slate-700">Close</button>
-            </div>
-
-            <DetailRow label="Name" value={viewRow.name} />
-            <DetailRow label="Code" value={viewRow.code} />
-            <DetailRow label="District Pastor" value={viewRow.districtPastor} />
-
-            <div className="mt-6">
-              <h4 className="text-sm font-semibold text-slate-600 mb-2">National Church</h4>
-              <div className="space-y-1 text-sm">
-                <div><span className="text-slate-500">Name:</span> {getNatName(viewRow.nationalChurchId)}</div>
-                {typeof viewRow.nationalChurchId !== "string" && (
-                  <>
-                    {viewRow.nationalChurchId.code && (
-                      <div><span className="text-slate-500">Code:</span> {viewRow.nationalChurchId.code}</div>
-                    )}
-                    {viewRow.nationalChurchId.nationalPastor && (
-                      <div><span className="text-slate-500">Pastor:</span> {viewRow.nationalChurchId.nationalPastor}</div>
-                    )}
-                    {(viewRow.nationalChurchId.contactEmail || viewRow.nationalChurchId.contactPhone) && (
-                      <div className="flex flex-col gap-1">
-                        {viewRow.nationalChurchId.contactEmail && (
-                          <div className="inline-flex items-center gap-2"><Mail className="w-4 h-4" /> {viewRow.nationalChurchId.contactEmail}</div>
-                        )}
-                        {viewRow.nationalChurchId.contactPhone && (
-                          <div className="inline-flex items-center gap-2"><Phone className="w-4 h-4" /> {viewRow.nationalChurchId.contactPhone}</div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-
-            {viewRow.address && (
-              <div className="mt-6">
-                <h4 className="text-sm font-semibold text-slate-600 mb-2">District Address</h4>
-                <div className="text-sm space-y-1">
-                  {viewRow.address.street && <div>{viewRow.address.street}</div>}
-                  <div>
-                    {[viewRow.address.city, viewRow.address.state, viewRow.address.zip].filter(Boolean).join(", ")}
-                  </div>
-                  {viewRow.address.country && <div>{viewRow.address.country}</div>}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-sm text-slate-500 flex items-center gap-2">
+                  <Map className="w-4 h-4" /> District
                 </div>
+                <h3 className="text-xl font-semibold">{selectedRow.name}</h3>
               </div>
-            )}
+              <button onClick={() => setDrawerId(null)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/10">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-6">
+              <Card title="Basic Information">
+                <KV label="Code" value={selectedRow.code} />
+                <KV label="District Pastor" value={selectedRow.districtPastor} />
+              </Card>
+
+              <Card title="National Church">
+                <div className="space-y-2 text-sm">
+                  <KV label="Name" value={getNatName(selectedRow.nationalChurchId)} />
+                  {typeof selectedRow.nationalChurchId !== "string" && (
+                    <>
+                      {selectedRow.nationalChurchId.code && (
+                        <KV label="Code" value={selectedRow.nationalChurchId.code} />
+                      )}
+                      {selectedRow.nationalChurchId.nationalPastor && (
+                        <KV label="Pastor" value={selectedRow.nationalChurchId.nationalPastor} />
+                      )}
+                      {(selectedRow.nationalChurchId.contactEmail ||
+                        selectedRow.nationalChurchId.contactPhone) && (
+                        <div className="space-y-1 text-sm">
+                          {selectedRow.nationalChurchId.contactEmail && (
+                            <div className="inline-flex items-center gap-2">
+                              <Mail className="w-4 h-4" /> {selectedRow.nationalChurchId.contactEmail}
+                            </div>
+                          )}
+                          {selectedRow.nationalChurchId.contactPhone && (
+                            <div className="inline-flex items-center gap-2">
+                              <Phone className="w-4 h-4" /> {selectedRow.nationalChurchId.contactPhone}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </Card>
+
+              <Card title="Address">
+                {!selectedRow.address || Object.values(selectedRow.address).every((v) => !v) ? (
+                  <div className="text-sm text-slate-500">No address provided.</div>
+                ) : (
+                  <div className="space-y-1 text-sm">
+                    {selectedRow.address.street && <div>{selectedRow.address.street}</div>}
+                    <div>
+                      {[selectedRow.address.city, selectedRow.address.state, selectedRow.address.zip]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </div>
+                    {selectedRow.address.country && <div>{selectedRow.address.country}</div>}
+                  </div>
+                )}
+              </Card>
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>
@@ -417,26 +488,80 @@ export default function DistrictsPage() {
   );
 }
 
-function TextField({
-  label, value, onChange,
-}: { label: string; value: string; onChange: (v: string) => void }) {
+/* ---------------- Small UI Bits (match Churches) ---------------- */
+
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border p-4 bg-white/80 dark:bg-white/5">
+      <div className="text-sm text-slate-500 mb-2">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function KV({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="flex justify-between text-sm">
+      <span className="text-slate-600 dark:text-slate-400">{label}</span>
+      <span>{value || "—"}</span>
+    </div>
+  );
+}
+
+function Text({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value?: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <label className="block">
       <span className="block text-sm mb-1">{label}</span>
       <input
         className="w-full px-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70"
-        value={value}
+        value={value || ""}
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
   );
 }
 
-function DetailRow({ label, value }: { label: string; value?: string }) {
+function Select({
+  label,
+  value,
+  onChange,
+  options,
+  disabled,
+  icon,
+}: {
+  label?: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string }[];
+  disabled?: boolean;
+  icon?: React.ReactNode;
+}) {
   return (
-    <div className="text-sm flex gap-3 py-1">
-      <span className="w-32 text-slate-500">{label}</span>
-      <span className="flex-1">{value ?? "—"}</span>
-    </div>
+    <label className="block">
+      {label && <span className="block text-sm mb-1">{label}</span>}
+      <div className="relative">
+        {icon && <span className="absolute left-3 top-2.5">{icon}</span>}
+        <select
+          className={`w-full ${icon ? "pl-9" : "pl-3"} pr-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70`}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </label>
   );
 }

@@ -1,189 +1,176 @@
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import HeroImage from "../assets/images/hero2.jpg";
+import { Link } from "react-router-dom";
 
-export default function Hero() {
+const BRAND_PRIMARY = "#021347";
+const BRAND_GOLD = "#D4AF37";
+
+export default function HeroChristian() {
   const reduce = useReducedMotion();
+  const [showAll, setShowAll] = useState(false);
+  const [isSmall, setIsSmall] = useState(true); // < sm by default
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)"); // sm
+    const handler = (e: MediaQueryListEvent | MediaQueryList) =>
+      setIsSmall(!e.matches);
+    handler(mq);
+    mq.addEventListener?.("change", handler as any);
+    return () => mq.removeEventListener?.("change", handler as any);
+  }, []);
+
+  const FEATURES = [
+    "Member Engagement",
+    "Discipleship Tracker",
+    "Smart Notifications",
+    "Unified Messaging",
+    "Care Visit Logs",
+    "Insightful Reports",
+  ];
+
+  const VISIBLE_FEATURES = !isSmall || showAll ? FEATURES : FEATURES.slice(0, 3);
+
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { delayChildren: reduce ? 0 : 0.5, staggerChildren: reduce ? 0 : 0.07 },
+    },
+  };
+  const item = { hidden: { opacity: 0, y: 6 }, visible: { opacity: 1, y: 0 } };
 
   return (
-    <section className="relative overflow-hidden bg-white dark:bg-slate-950">
-      {/* Background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        {/* gradient blobs — smaller/softer on mobile */}
-        <div className="absolute -top-20 -left-20 w-[26rem] h-[26rem] sm:w-[32rem] sm:h-[32rem] lg:w-[38rem] lg:h-[38rem] rounded-full blur-2xl sm:blur-3xl opacity-20 sm:opacity-30 bg-gradient-to-br from-amber-300 to-rose-300 dark:from-amber-400/40 dark:to-rose-400/40" />
-        <div className="absolute bottom-[-12rem] right-[-8rem] w-[28rem] h-[28rem] sm:w-[34rem] sm:h-[34rem] lg:w-[40rem] lg:h-[40rem] rounded-full blur-2xl sm:blur-3xl opacity-15 sm:opacity-20 bg-gradient-to-tr from-indigo-300 to-emerald-300 dark:from-indigo-400/40 dark:to-emerald-400/40" />
-        {/* grid */}
-        <svg className="absolute inset-0 h-full w-full opacity-[0.06] sm:opacity-[0.08] dark:opacity-[0.12]" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-              <path d="M 32 0 L 0 0 0 32" fill="none" stroke="currentColor" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" className="text-slate-700" />
+    <section
+      className="relative min-h-[84vh] flex items-center justify-center text-center overflow-hidden"
+      aria-label="Dominion Connect hero"
+    >
+      {/* BG */}
+      <img
+        src={HeroImage}
+        alt="Open Bible"
+        className="absolute inset-0 h-full w-full object-cover"
+        decoding="async"
+        fetchPriority="high"
+      />
+
+      {/* overlays */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, rgba(212,175,55,0.06) 0%, rgba(139,0,0,0.12) 50%, rgba(2,19,71,0.46) 100%)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(circle at 50% 50%, rgba(212,175,55,0.16) 0%, transparent 60%)" }}
+      />
+      <div className="pointer-events-none absolute inset-0 shadow-[inset_0_-160px_240px_-100px_rgba(2,19,71,.65)]" />
+
+      {/* bottom wave */}
+      <div className="absolute inset-x-0 bottom-0 h-10 sm:h-14 overflow-hidden" aria-hidden>
+        <svg className="absolute bottom-0 w-full h-full" viewBox="0 0 1440 120" preserveAspectRatio="none" fill="none">
+          <path d="M0 120 L0 84 Q360 118 720 82 Q1080 46 1440 82 L1440 120 Z" fill={BRAND_GOLD} opacity="0.9" />
         </svg>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 pb-12 sm:pt-24 sm:pb-16 md:pt-28 md:pb-24">
-        <div className="grid items-center gap-10 sm:gap-12 lg:gap-16 md:grid-cols-2">
-          {/* LEFT: copy */}
-          <div className="text-center md:text-left">
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduce ? 0 : 0.35 }}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200/70 dark:border-white/10 bg-white/70 dark:bg-white/5 px-2.5 py-1 text-[11px] sm:text-xs text-slate-700 dark:text-slate-200 backdrop-blur"
-            >
-              <span className="inline-block h-2 w-2 rounded-full bg-gradient-to-r from-[#8B0000] to-[#D4AF37]" />
-              Dominion Connect · WCIN
-            </motion.div>
-
-            <motion.h1
-              initial={reduce ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduce ? 0 : 0.05, duration: reduce ? 0 : 0.45 }}
-              className="mt-3 font-serif text-[clamp(2rem,4vw,3.5rem)] leading-[1.1] text-slate-900 dark:text-white"
-            >
-              Connect. Organize.{" "}
-              <span className="bg-gradient-to-r from-[#8B0000] to-[#D4AF37] bg-clip-text text-transparent">
-                Grow Together.
-              </span>
-            </motion.h1>
-
-            <motion.p
-              initial={reduce ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduce ? 0 : 0.12, duration: reduce ? 0 : 0.45 }}
-              className="mt-4 sm:mt-5 mx-auto md:mx-0 max-w-[46ch] text-[15px] sm:text-base text-slate-600 dark:text-slate-300"
-            >
-              A modern platform for ministries and members — streamline communication, events, and care with excellence.
-              Built for speed, clarity, and impact.
-            </motion.p>
-
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduce ? 0 : 0.18, duration: reduce ? 0 : 0.45 }}
-              className="mt-6 sm:mt-8 flex flex-col xs:flex-row sm:flex-row gap-2.5 sm:gap-3 justify-center md:justify-start"
-            >
-              <a
-                href="#get-started"
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold text-white
-                           bg-gradient-to-r from-[#8B0000] to-[#D4AF37] shadow-md shadow-amber-500/20 hover:brightness-[1.05] transition"
-              >
-                Get Started <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href="#learn-more"
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold
-                           border border-slate-300/60 dark:border-white/15 bg-white/70 dark:bg-white/5 backdrop-blur
-                           hover:bg-white/90 dark:hover:bg-white/10 transition text-slate-800 dark:text-slate-100"
-              >
-                <Play className="h-4 w-4" /> See it in action
-              </a>
-            </motion.div>
-
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduce ? 0 : 0.24, duration: reduce ? 0 : 0.45 }}
-              className="mt-6 sm:mt-8 flex flex-wrap justify-center md:justify-start items-center gap-2.5 sm:gap-3 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400"
-            >
-              <span className="rounded-full bg-white/70 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 px-2.5 py-1">Secure & GDPR-ready</span>
-              <span className="rounded-full bg-white/70 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 px-2.5 py-1">99.9% Uptime</span>
-              <span className="rounded-full bg-white/70 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 px-2.5 py-1">Fast onboarding</span>
-            </motion.div>
+      {/* content */}
+      <motion.div
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: reduce ? 0 : 0.5 }}
+        className="relative z-10 w-full px-4 sm:px-6"
+      >
+        {/* mobile glass panel for readability; transparent on md+ */}
+        <div className="mx-auto max-w-[60rem] rounded-2xl bg-slate-900/35 backdrop-blur-[2px] ring-1 ring-white/10 p-4 sm:p-6 md:bg-transparent md:backdrop-blur-0 md:ring-0">
+          {/* icon */}
+           {/* icon */}
+          <div className="flex justify-center mb-5 sm:mb-6">
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full grid place-items-center bg-gradient-to-br from-[#D4AF37]/90 to-[#8B0000]/90 ring-2 ring-white/25 shadow-xl">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M12 3v18M6 7h12" stroke="white" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
           </div>
 
-          {/* RIGHT: visual */}
-          <motion.div
-            initial={reduce ? false : { opacity: 0, y: 20, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: reduce ? 0 : 0.12, type: reduce ? false : "spring", stiffness: 120, damping: 18 }}
-            className="relative mx-auto w-full max-w-sm sm:max-w-md md:max-w-none"
+
+          {/* heading */}
+          <h1
+            className="font-serif text-white drop-shadow-xl mx-auto [text-wrap:balance]"
+            style={{ fontSize: "clamp(1.9rem, 6vw, 3.8rem)", lineHeight: 1.12, letterSpacing: ".2px" }}
           >
-            {/* card: aspect changes by breakpoint for better fit */}
-            <div
-              className="relative mx-auto aspect-[4/5] sm:aspect-[5/6] md:aspect-[4/5] w-[18rem] sm:w-[22rem] md:w-96
-                         rounded-3xl border border-slate-200/70 dark:border-white/10 bg-white/85 dark:bg-white/[0.06]
-                         backdrop-blur-xl shadow-2xl overflow-hidden"
-              aria-label="Dashboard preview"
+            Empower Your Ministry:
+            <br className="hidden sm:block" />
+            <span className="sm:ml-1">Nurture Souls, Not Numbers.</span>
+          </h1>
+
+          {/* subline */}
+          <p className="mt-3 sm:mt-5 text-white/95 mx-auto text-[15px] sm:text-base leading-relaxed max-w-[46rem]">
+            Dominion Connect streamlines administration, fosters genuine connections, and amplifies your impact.
+          </p>
+
+          {/* CTAs */}
+          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+            <a
+              href="#get-started"
+              className="group relative inline-flex items-center justify-center rounded-full px-6 py-3 sm:px-7 sm:py-3.5
+                         text-sm font-semibold uppercase text-white shadow-lg focus-visible:outline-none
+                         focus-visible:ring-2 focus-visible:ring-white/80 transition-all w-full sm:w-auto"
+              style={{ background: BRAND_PRIMARY }}
             >
-              {/* header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200/70 dark:border-white/10">
-                <div className="flex items-center gap-2">
-                  <div className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                </div>
-                <div className="h-2 w-20 sm:w-24 rounded bg-slate-200/80 dark:bg-white/10" />
-              </div>
+              <Link to="/get-started" className="relative z-10">Get Started</Link>
+              {!reduce && (
+                <span className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+                  <span className="absolute -left-1/3 top-0 h-full w-1/3 -skew-x-12 bg-white/25 blur-[2px] transition-transform duration-700 group-hover:translate-x-[260%]" />
+                </span>
+              )}
+            </a>
 
-              {/* content */}
-              <div className="p-4 sm:p-5 space-y-3 sm:space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[13px] sm:text-sm font-semibold text-slate-800 dark:text-slate-100">Member Directory</p>
-                  <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">4,200 active</span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-                  {["Leaders", "Ushers", "Choir", "Teens", "Children", "Media"].map((label) => (
-                    <div
-                      key={label}
-                      className="h-20 sm:h-24 rounded-xl border border-slate-200/70 dark:border-white/10
-                                 bg-gradient-to-br from-white to-slate-50 dark:from-white/5 dark:to-white/[0.02] p-2.5 sm:p-3 flex items-end"
-                      aria-label={`${label} group`}
-                    >
-                      <span className="text-[10px] sm:text-[11px] font-medium text-slate-600 dark:text-slate-300">{label}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* progress */}
-                <div className="mt-1.5 sm:mt-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-[13px] sm:text-sm font-semibold text-slate-800 dark:text-slate-100">Volunteer Hours Goal</p>
-                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">72% this month</span>
-                  </div>
-                  <div
-                    className="h-8 sm:h-10 w-full rounded-xl bg-slate-100 dark:bg-white/10 overflow-hidden"
-                    role="progressbar"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={72}
-                    aria-label="Volunteer hours progress"
-                  >
-                    <div className="h-full w-[72%] bg-gradient-to-r from-[#8B0000] to-[#D4AF37]" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* floating stats — size & position per breakpoint */}
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduce ? 0 : 0.25, duration: reduce ? 0 : 0.35 }}
-              className="absolute -left-1 sm:-left-3 -top-2 sm:-top-3 rounded-2xl border border-slate-200/70 dark:border-white/10
-                         bg-white/95 dark:bg-slate-900/85 backdrop-blur px-3 sm:px-4 py-2.5 sm:py-3 shadow-xl"
-              aria-label="Active members stat"
+            <a
+              href="#watch-demo"
+              className="inline-flex items-center justify-center rounded-full px-6 py-3 sm:px-7 sm:py-3.5 text-sm font-semibold uppercase
+                         text-white/95 ring-2 ring-white/45 hover:ring-white/70 hover:bg-white/10 backdrop-blur-sm
+                         transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80
+                         w-full sm:w-auto"
             >
-              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Active members</p>
-              <p className="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">4,200+</p>
-            </motion.div>
+              Watch Demo
+            </a>
+          </div>
 
-            <motion.div
-              initial={reduce ? false : { opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduce ? 0 : 0.3, duration: reduce ? 0 : 0.35 }}
-              className="absolute right-2 sm:-right-4 bottom-3 sm:bottom-6 rounded-2xl border border-slate-200/70 dark:border-white/10
-                         bg-white/95 dark:bg-slate-900/85 backdrop-blur px-3 sm:px-4 py-2.5 sm:py-3 shadow-xl"
-              aria-label="Events scheduled this month"
-            >
-              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Events this month</p>
-              <p className="text-sm sm:text-lg font-semibold text-slate-900 dark:text-white">27</p>
-            </motion.div>
-          </motion.div>
+          {/* TAGS GRID — 1 col xs, 2 on sm, 3 on md+; "More features" on mobile */}
+          <motion.ul
+            variants={container}
+            initial="hidden"
+            animate="visible"
+            className="mt-6 sm:mt-8 mx-auto w-full max-w-[56rem] grid gap-2.5 sm:gap-3
+                       grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+          >
+            {VISIBLE_FEATURES.map((label) => (
+              <motion.li
+                key={label}
+                variants={item}
+                className="flex items-center justify-center rounded-full border border-white/30 bg-white/15
+                           px-4 py-2 text-[13px] sm:text-[13.5px] text-white/95 backdrop-blur-md
+                           hover:bg-white/25 transition-colors"
+              >
+                {label}
+              </motion.li>
+            ))}
+
+            {/* Mobile: toggle pill */}
+            {isSmall && (
+              <button
+                onClick={() => setShowAll((s) => !s)}
+                className="rounded-full border border-white/30 bg-transparent px-4 py-2 text-[13px] text-white/95
+                           hover:bg-white/10 transition-colors"
+              >
+                {showAll ? "Show less" : "More features"}
+              </button>
+            )}
+          </motion.ul>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

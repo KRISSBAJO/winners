@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Church as ChurchIcon, Plus, Pencil, Trash2, Search, Eye, Mail, Phone, Building2, Map } from "lucide-react";
+import { Church as ChurchIcon, Plus, Pencil, Trash2, Search, Eye, Mail, Phone, Building2, Map, X } from "lucide-react";
 import {
   useNationalList,
   useDistrictsByNational,
@@ -77,8 +77,7 @@ export default function ChurchesPage() {
   });
 
   // View drawer
-  const [openView, setOpenView] = useState(false);
-  const [viewRow, setViewRow] = useState<Row | null>(null);
+  const [drawerId, setDrawerId] = useState<string | null>(null);
 
   // ---------- helpers for mixed type districtId ----------
   const getDistId = (d: DistrictLite | undefined) =>
@@ -115,6 +114,8 @@ export default function ChurchesPage() {
         .some((v) => String(v).toLowerCase().includes(q))
     );
   }, [churches, query, districts]);
+
+  const selectedChurch = useMemo(() => churches.find((c: any) => c._id === drawerId), [churches, drawerId]);
 
   // reset child when parent changes
   const onNationalChange = (id: string) => {
@@ -156,11 +157,6 @@ export default function ChurchesPage() {
     setOpenForm(true);
   };
 
-  const openDetails = (row: Row) => {
-    setViewRow(row);
-    setOpenView(true);
-  };
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.districtId) {
@@ -186,6 +182,7 @@ export default function ChurchesPage() {
     try {
       await deleteMutation.mutateAsync(id);
       toast.success("Church deleted");
+      if (drawerId === id) setDrawerId(null);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || err?.message || "Delete failed");
     }
@@ -198,7 +195,7 @@ export default function ChurchesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking flex items-center gap-2">
+          <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
             <ChurchIcon className="w-5 h-5 text-amber-600" /> Churches Management
           </h1>
           <p className="text-sm text-slate-500">Filter by National → District to manage churches.</p>
@@ -207,7 +204,8 @@ export default function ChurchesPage() {
         {canManage && (
           <button
             onClick={startCreate}
-            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-white shadow-md"
+            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-white shadow-md disabled:opacity-60"
+            disabled={!districtId}
             style={{ background: "linear-gradient(135deg,#8B0000,#D4AF37)" }}
           >
             <Plus className="w-4 h-4" /> New Church
@@ -217,34 +215,30 @@ export default function ChurchesPage() {
 
       {/* Filters */}
       <div className="grid sm:grid-cols-3 gap-3">
-        <select
-          className="px-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70"
+        <Select
+          icon={<Building2 className="w-4 h-4 text-slate-400" />}
           value={nationalId}
-          onChange={(e) => onNationalChange(e.target.value)}
-        >
-          <option value="">Select national…</option>
-          {nationals.map((n: any) => (
-            <option key={n._id} value={n._id}>{n.name}</option>
-          ))}
-        </select>
-
-        <select
-          className="px-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70"
+          onChange={onNationalChange}
+          options={[
+            { label: "Select national…", value: "" },
+            ...nationals.map((n: any) => ({ label: n.name, value: n._id })),
+          ]}
+        />
+        <Select
+          icon={<Map className="w-4 h-4 text-slate-400" />}
           value={districtId}
-          onChange={(e) => setDistrictId(e.target.value)}
+          onChange={setDistrictId}
           disabled={!nationalId}
-        >
-          <option value="">{nationalId ? "Select district…" : "Select national first"}</option>
-          {(districts || []).map((d: any) => (
-            <option key={d._id} value={d._id}>{d.name}</option>
-          ))}
-        </select>
-
+          options={[
+            { label: nationalId ? "Select district…" : "Select national first", value: "" },
+            ...districts.map((d: any) => ({ label: d.name, value: d._id })),
+          ]}
+        />
         <div className="relative">
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
           <input
             className="w-full pl-9 pr-3 py-2 border rounded-lg bg-white/90 dark:bg-slate-800/70"
-            placeholder="Search church…"
+            placeholder="Search churches…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -254,70 +248,75 @@ export default function ChurchesPage() {
       {/* Table */}
       <div className="overflow-hidden rounded-2xl border border-slate-200/70 dark:border-white/10 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-500">
-              <tr>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Code</th>
-                <th className="px-4 py-3 text-left">Pastor</th>
-                <th className="px-4 py-3 text-left">District</th>
-                <th className="px-4 py-3 text-left">National</th>
-                <th className="px-4 py-3 text-left">Contact</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+          <table className="min-w-full text-sm divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-600 sticky top-0 z-10 shadow-sm">
+              <tr className="divide-x divide-slate-200 dark:divide-slate-700">
+                <th className="px-6 py-4 text-left font-semibold">Name</th>
+                <th className="px-6 py-4 text-left font-semibold">Code</th>
+                <th className="px-6 py-4 text-left font-semibold">Pastor</th>
+                <th className="px-6 py-4 text-left font-semibold">District</th>
+                <th className="px-6 py-4 text-left font-semibold">National</th>
+                <th className="px-6 py-4 text-left font-semibold">Contact</th>
+                <th className="px-6 py-4 text-right font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               {isLoading && (
-                <tr><td className="px-4 py-6 text-center text-slate-500" colSpan={7}>Loading…</td></tr>
+                <tr><td colSpan={7} className="px-6 py-6 text-center text-slate-500">Loading…</td></tr>
               )}
               {!isLoading && filtered.length === 0 && (
-                <tr><td className="px-4 py-6 text-center text-slate-500" colSpan={7}>No churches.</td></tr>
+                <tr><td colSpan={7} className="px-6 py-6 text-center text-slate-500">No churches.</td></tr>
               )}
-              {filtered.map((c: Row) => (
-                <tr key={c._id} className="border-t border-slate-100 dark:border-white/5 hover:bg-slate-50/50 dark:hover:bg-white/5">
-                  <td className="px-4 py-3">{c.name}</td>
-                  <td className="px-4 py-3">{c.churchId}</td>
-                  <td className="px-4 py-3">{c.pastor}</td>
-                  <td className="px-4 py-3">
+              {filtered.map((c: Row, i) => (
+                <motion.tr 
+                  key={c._id} 
+                  className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-200 divide-x divide-slate-100 dark:divide-white/5 ${
+                    i % 2 === 0 ? 'bg-white/70 dark:bg-slate-900/30' : ''
+                  }`}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: i * 0.02 }}
+                >
+                  <td className="px-6 py-4 font-medium text-slate-800 dark:text-slate-200">
+                    <button className="font-medium hover:underline" onClick={() => setDrawerId(c._id)}>
+                      {c.name}
+                    </button>
+                  </td>
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{c.churchId}</td>
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{c.pastor}</td>
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
                     <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs bg-slate-50 text-slate-700">
                       <Map className="w-3 h-3" />
                       {getDistName(c.districtId)}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
                     <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs bg-amber-50 text-amber-700">
                       <Building2 className="w-3 h-3" />
                       {getNatNameFromDistrict(c.districtId)}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
                     <div className="flex flex-col">
                       {c.contactEmail && <span className="inline-flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> {c.contactEmail}</span>}
                       {c.contactPhone && <span className="inline-flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {c.contactPhone}</span>}
                     </div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openDetails(c)}
-                        className="px-2 py-1 rounded-md bg-slate-50 text-slate-700 hover:bg-slate-100"
-                        title="View"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
                       {canManage && (
                         <>
-                          <button onClick={() => startEdit(c)} className="px-2 py-1 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100" title="Edit">
+                          <button onClick={() => startEdit(c)} className="p-2 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 transition" title="Edit">
                             <Pencil className="w-4 h-4" />
                           </button>
-                          <button onClick={() => remove(c._id)} className="px-2 py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100" title="Delete">
+                          <button onClick={() => remove(c._id)} className="p-2 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition" title="Delete">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </>
                       )}
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
@@ -336,40 +335,45 @@ export default function ChurchesPage() {
               initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }}
               className="w-full max-w-xl rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl space-y-4 border border-white/10"
             >
-              <h3 className="text-lg font-semibold">{editingId ? "Edit Church" : "Create Church"}</h3>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <label className="block">
-                  <span className="text-sm">District</span>
-                  <select
-                    className="mt-1 w-full px-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70"
-                    value={form.districtId}
-                    onChange={(e) => setForm((p) => ({ ...p, districtId: e.target.value }))}
-                  >
-                    <option value="">Select district…</option>
-                    {(districts || []).map((d: any) => (
-                      <option key={d._id} value={d._id}>{d.name}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <TextField label="Name" value={form.name} onChange={(v) => setForm((p) => ({ ...p, name: v }))} />
-                <TextField label="Code" value={form.churchId} onChange={(v) => setForm((p) => ({ ...p, churchId: v }))} />
-                <TextField label="Pastor" value={form.pastor} onChange={(v) => setForm((p) => ({ ...p, pastor: v }))} />
-                <TextField label="Email" value={form.contactEmail ?? ""} onChange={(v) => setForm((p) => ({ ...p, contactEmail: v }))} />
-                <TextField label="Phone" value={form.contactPhone ?? ""} onChange={(v) => setForm((p) => ({ ...p, contactPhone: v }))} />
+              <div className="flex items-start justify-between">
+                <h3 className="text-lg font-semibold">{editingId ? "Edit Church" : "Create Church"}</h3>
+                <button type="button" onClick={() => setOpenForm(false)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/10">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div className="grid sm:grid-cols-3 gap-4">
-                <TextField label="City" value={form.address?.city ?? ""} onChange={(v) =>
-                  setForm((p) => ({ ...p, address: { ...(p.address ?? {}), city: v } }))
+              <div className="grid gap-4">
+                <Select
+                  label="District"
+                  value={form.districtId}
+                  onChange={(v) => setForm((p) => ({ ...p, districtId: v }))}
+                  options={[
+                    { label: "Select district…", value: "" },
+                    ...districts.map((d: any) => ({ label: d.name, value: d._id })),
+                  ]}
+                />
+                <Text label="Name" value={form.name} onChange={(v) => setForm((p) => ({ ...p, name: v }))} />
+                <Text label="Code" value={form.churchId} onChange={(v) => setForm((p) => ({ ...p, churchId: v }))} />
+                <Text label="Pastor" value={form.pastor} onChange={(v) => setForm((p) => ({ ...p, pastor: v }))} />
+                <Text label="Email" value={form.contactEmail ?? ""} onChange={(v) => setForm((p) => ({ ...p, contactEmail: v }))} />
+                <Text label="Phone" value={form.contactPhone ?? ""} onChange={(v) => setForm((p) => ({ ...p, contactPhone: v }))} />
+                <Text label="Street" value={form.address?.street ?? ""} onChange={(v) =>
+                  setForm((p) => ({ ...p, address: { ...(p.address ?? {}), street: v } }))
                 } />
-                <TextField label="State" value={form.address?.state ?? ""} onChange={(v) =>
-                  setForm((p) => ({ ...p, address: { ...(p.address ?? {}), state: v } }))
-                } />
-                <TextField label="Country" value={form.address?.country ?? ""} onChange={(v) =>
-                  setForm((p) => ({ ...p, address: { ...(p.address ?? {}), country: v } }))
-                } />
+                <div className="grid sm:grid-cols-4 gap-4">
+                  <Text label="City" value={form.address?.city ?? ""} onChange={(v) =>
+                    setForm((p) => ({ ...p, address: { ...(p.address ?? {}), city: v } }))
+                  } />
+                  <Text label="State" value={form.address?.state ?? ""} onChange={(v) =>
+                    setForm((p) => ({ ...p, address: { ...(p.address ?? {}), state: v } }))
+                  } />
+                  <Text label="Zip" value={form.address?.zip ?? ""} onChange={(v) =>
+                    setForm((p) => ({ ...p, address: { ...(p.address ?? {}), zip: v } }))
+                  } />
+                  <Text label="Country" value={form.address?.country ?? ""} onChange={(v) =>
+                    setForm((p) => ({ ...p, address: { ...(p.address ?? {}), country: v } }))
+                  } />
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
@@ -395,60 +399,90 @@ export default function ChurchesPage() {
         )}
       </AnimatePresence>
 
-      {/* View Drawer */}
+      {/* Drawer */}
       <AnimatePresence>
-        {openView && viewRow && (
+        {drawerId && selectedChurch && (
           <motion.aside
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl z-50 border-l border-white/10 p-6 overflow-y-auto"
-            initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 120, damping: 18 }}
+            initial={{ x: 420, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 420, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 26 }}
+            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-lg bg-white dark:bg-slate-900 border-l border-slate-200/70 dark:border-white/10 p-6 overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <ChurchIcon className="w-5 h-5 text-amber-600" /> Church Details
-              </h3>
-              <button onClick={() => setOpenView(false)} className="text-slate-500 hover:text-slate-700">Close</button>
-            </div>
-
-            <DetailRow label="Name" value={viewRow.name} />
-            <DetailRow label="Code" value={viewRow.churchId} />
-            <DetailRow label="Pastor" value={viewRow.pastor} />
-            {(viewRow.contactEmail || viewRow.contactPhone) && (
-              <div className="text-sm flex gap-3 py-1">
-                <span className="w-32 text-slate-500">Contact</span>
-                <div className="flex-1 space-y-1">
-                  {viewRow.contactEmail && <div className="inline-flex items-center gap-2"><Mail className="w-4 h-4" /> {viewRow.contactEmail}</div>}
-                  {viewRow.contactPhone && <div className="inline-flex items-center gap-2"><Phone className="w-4 h-4" /> {viewRow.contactPhone}</div>}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-sm text-slate-500 flex items-center gap-2">
+                  <ChurchIcon className="w-4 h-4" /> Church
                 </div>
+                <h3 className="text-xl font-semibold">{selectedChurch.name}</h3>
               </div>
-            )}
-
-            <div className="mt-6">
-              <h4 className="text-sm font-semibold text-slate-600 mb-2">District</h4>
-              <div className="text-sm space-y-1">
-                <div><span className="text-slate-500">Name:</span> {getDistName(viewRow.districtId)}</div>
-              </div>
+              <button onClick={() => setDrawerId(null)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/10">
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div className="mt-6">
-              <h4 className="text-sm font-semibold text-slate-600 mb-2">National Church</h4>
-              <div className="text-sm space-y-1">
-                <div><span className="text-slate-500">Name:</span> {getNatNameFromDistrict(viewRow.districtId)}</div>
-              </div>
-            </div>
-
-            {viewRow.address && (
-              <div className="mt-6">
-                <h4 className="text-sm font-semibold text-slate-600 mb-2">Address</h4>
-                <div className="text-sm space-y-1">
-                  {viewRow.address.street && <div>{viewRow.address.street}</div>}
-                  <div>
-                    {[viewRow.address.city, viewRow.address.state, viewRow.address.zip].filter(Boolean).join(", ")}
+            <div className="mt-4 space-y-6">
+              <div className="rounded-xl border p-4 bg-white/80 dark:bg-white/5">
+                <div className="text-sm text-slate-500 mb-2">Basic Information</div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Code</span>
+                    <span>{selectedChurch.churchId || "—"}</span>
                   </div>
-                  {viewRow.address.country && <div>{viewRow.address.country}</div>}
+                  <div className="flex justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Pastor</span>
+                    <span>{selectedChurch.pastor || "—"}</span>
+                  </div>
                 </div>
               </div>
-            )}
+
+              <div className="rounded-xl border p-4 bg-white/80 dark:bg-white/5">
+                <div className="text-sm text-slate-500 mb-2">Contact</div>
+                {(selectedChurch.contactEmail || selectedChurch.contactPhone) ? (
+                  <div className="space-y-2 text-sm">
+                    {selectedChurch.contactEmail && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                        {selectedChurch.contactEmail}
+                      </div>
+                    )}
+                    {selectedChurch.contactPhone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                        {selectedChurch.contactPhone}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-500">No contact information.</div>
+                )}
+              </div>
+
+              <div className="rounded-xl border p-4 bg-white/80 dark:bg-white/5">
+                <div className="text-sm text-slate-500 mb-2">District</div>
+                <div className="text-sm">{getDistName(selectedChurch.districtId) || "—"}</div>
+              </div>
+
+              <div className="rounded-xl border p-4 bg-white/80 dark:bg-white/5">
+                <div className="text-sm text-slate-500 mb-2">National Church</div>
+                <div className="text-sm">{getNatNameFromDistrict(selectedChurch.districtId) || "—"}</div>
+              </div>
+
+              <div className="rounded-xl border p-4 bg-white/80 dark:bg-white/5">
+                <div className="text-sm text-slate-500 mb-2">Address</div>
+                {!selectedChurch.address || Object.values(selectedChurch.address).every(v => !v) ? (
+                  <div className="text-sm text-slate-500">No address provided.</div>
+                ) : (
+                  <div className="space-y-1 text-sm">
+                    {selectedChurch.address.street && <div>{selectedChurch.address.street}</div>}
+                    <div>
+                      {[selectedChurch.address.city, selectedChurch.address.state, selectedChurch.address.zip].filter(Boolean).join(", ")}
+                    </div>
+                    {selectedChurch.address.country && <div>{selectedChurch.address.country}</div>}
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>
@@ -456,26 +490,62 @@ export default function ChurchesPage() {
   );
 }
 
-function TextField({
-  label, value, onChange,
-}: { label: string; value: string; onChange: (v: string) => void }) {
+/* ---------------- Helpers & Small UI Bits ---------------- */
+
+function Text({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value?: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <label className="block">
       <span className="block text-sm mb-1">{label}</span>
       <input
         className="w-full px-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70"
-        value={value}
+        value={value || ""}
         onChange={(e) => onChange(e.target.value)}
       />
     </label>
   );
 }
 
-function DetailRow({ label, value }: { label: string; value?: string }) {
+function Select({
+  label,
+  value,
+  onChange,
+  options,
+  disabled,
+  icon,
+}: {
+  label?: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { label: string; value: string }[];
+  disabled?: boolean;
+  icon?: React.ReactNode;
+}) {
   return (
-    <div className="text-sm flex gap-3 py-1">
-      <span className="w-32 text-slate-500">{label}</span>
-      <span className="flex-1">{value ?? "—"}</span>
-    </div>
+    <label className="block">
+      {label && <span className="block text-sm mb-1">{label}</span>}
+      <div className="relative">
+        {icon && <span className="absolute left-3 top-2.5">{icon}</span>}
+        <select
+          className={`w-full ${icon ? "pl-9" : "pl-3"} pr-3 py-2 rounded-lg border bg-white/90 dark:bg-slate-800/70`}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
+        >
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </label>
   );
 }

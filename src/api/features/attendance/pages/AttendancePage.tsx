@@ -137,17 +137,7 @@ export default function AttendancePage() {
 
       {/* Main */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 space-y-10 pb-20 pt-6">
-        {/* Summary Cards */}
-        {summaryQuery.data && (
-          <motion.div
-            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            <AttendanceSummary totals={summaryQuery.data.totals} />
-          </motion.div>
-        )}
+        
 
         {/* Charts */}
         <motion.div

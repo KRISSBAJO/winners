@@ -6,7 +6,7 @@ import Footer from "./components/Footer";
 import CallToAction from "./components/CallToAction";
 import Ministries from "./components/Ministries";
 import Events from "./components/Events";
-import Nav from "./components/Nav";
+import HomeFellowship from "./components/HomeFellowship";
 
 export default function App() {
   return (
@@ -15,6 +15,7 @@ export default function App() {
       <main>
         <Hero />
         <Features />
+        <HomeFellowship />
         <Ministries />
         <Events />
         <Testimonial />

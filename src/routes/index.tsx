@@ -38,6 +38,12 @@ import FollowUpListPage from "../api/features/followup/pages/FollowUpListPage";
 import FollowUpCaseDetailPage from "../api/features/followup/pages/FollowUpCaseDetailPage";
 import OpenFollowUpPage from "../api/features/followup/pages/OpenFollowUpPage";
 
+import CellsListPage from "../api/features/cells/pages/CellsListPage";
+import CellDetailPage from "../api/features/cells/pages/CellDetailPage";
+import CellsDashboardPage from "../api/features/cells/pages/CellsDashboardPage";
+
+import GetStartedForm from "../components/GetStartedForm";
+
 const router = createBrowserRouter([
  
   {
@@ -57,6 +63,7 @@ const router = createBrowserRouter([
   { path: "/events/:id", element: <AnimatedPageWrapper><EventDetailPublic /></AnimatedPageWrapper> },
 
     { path: "self-register", element: <AnimatedPageWrapper><SelfRegisterPage /></AnimatedPageWrapper> },
+    { path: "get-started", element: <AnimatedPageWrapper><GetStartedForm /></AnimatedPageWrapper> },
 
   // Dashboard (protected)
   {
@@ -108,6 +115,12 @@ const router = createBrowserRouter([
       { path: "follow-up", element: <AnimatedPageWrapper><FollowUpListPage /></AnimatedPageWrapper> },
       { path: "followup/open", element: <AnimatedPageWrapper><OpenFollowUpPage /></AnimatedPageWrapper> },
       { path: "followup/:id", element: <AnimatedPageWrapper><FollowUpCaseDetailPage /></AnimatedPageWrapper> },
+
+      // add under /dashboard in your routes
+      { path: "cells", element: <AnimatedPageWrapper><CellsListPage /></AnimatedPageWrapper> },
+      { path: "cells/:id", element: <AnimatedPageWrapper><CellDetailPage /></AnimatedPageWrapper> },
+      { path: "analytics/cells", element: <AnimatedPageWrapper><CellsDashboardPage /></AnimatedPageWrapper> },
+
     ],
   },
 ]);

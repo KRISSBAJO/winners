@@ -1,177 +1,155 @@
-import React from "react";
-import { motion, useReducedMotion, useMotionValue, useTransform } from "framer-motion";
-import { ArrowRight, UserPlus } from "lucide-react";
-// If you use react-router, uncomment the next line
-// import { Link } from "react-router-dom";
+import { ArrowRight, Users, MessageSquare, CheckCircle2 } from "lucide-react";
 
-/* --------------------------- Brand & Config --------------------------- */
-const BRAND_RED = "#8B0000";
+/* ---- Brand ---- */
+const BRAND_RED  = "#8B0000";
+const BRAND_GOLD = "#D4AF37";
 
-type CTAProps = {
-  title?: string;
-  blurb?: string;
-  registerHref?: string;         // use when navigating by URL
-  learnHref?: string;
-  onRegisterClick?: () => void;  // or use callbacks
-  onLearnClick?: () => void;
-  id?: string;                   // for section/anchor links
-};
-
-const BackgroundFX = () => (
-  <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
-    <div className="absolute -top-40 -left-24 h-[28rem] w-[28rem] rounded-full bg-gradient-to-r from-amber-300/20 to-rose-300/20 blur-3xl" />
-    <div className="absolute -bottom-40 -right-24 h-[30rem] w-[30rem] rounded-full bg-gradient-to-r from-rose-300/20 to-amber-300/20 blur-3xl" />
-  </div>
-);
-
-/* ------------------------------ Orb ---------------------------------- */
-const CommunityOrb: React.FC<{ reduced?: boolean }> = ({ reduced }) => {
-  const x = useMotionValue(0.5);
-  const y = useMotionValue(0.5);
-  const rotateX = useTransform(y, [0, 1], [15, -15]);
-  const rotateY = useTransform(x, [0, 1], [-15, 15]);
-
-  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set((e.clientX - rect.left) / rect.width);
-    y.set((e.clientY - rect.top) / rect.height);
-  };
-
-  const onMouseLeave = () => {
-    x.set(0.5);
-    y.set(0.5);
-  };
-
-  // Reduced-motion: render a static badge for perf & accessibility
-  if (reduced) {
-    return (
-      <div className="flex items-center justify-center">
-        <div className="relative w-56 h-56 rounded-full bg-gradient-to-br from-amber-400/30 to-rose-500/30 shadow-2xl grid place-items-center">
-          <UserPlus className="w-14 h-14 text-white/85" aria-hidden />
-        </div>
-      </div>
-    );
-  }
+/**
+ * Premium, classy CTA cards section
+ * - Elegant header (eyebrow + headline + subline)
+ * - Three gradient-border “glass” cards with medallion icons
+ * - Tasteful bottom ribbon CTA
+ */
+export default function SignatureCtaSuite({
+  primaryHref = "/get-started",
+  headline = "A Ministry Suite with Care at the Center",
+  subline  = "Membership, follow-up, messaging, and visits—beautifully connected so your team can serve with excellence.",
+}: {
+  primaryHref?: string;
+  headline?: string;
+  subline?: string;
+}) {
+  const items = [
+    {
+      icon: Users,
+      title: "Membership & Care",
+      text: "Households, profiles, visits, and notes—kept together with grace and clarity.",
+    },
+    {
+      icon: MessageSquare,
+      title: "Follow-up & Messaging",
+      text: "Automated workflows, tasks, and SMS/Email in one quiet, reliable place.",
+    },
+    {
+      icon: CheckCircle2,
+      title: "Guided Onboarding",
+      text: "White-glove setup and data import to help your team start strong.",
+    },
+  ];
 
   return (
-    <motion.div
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      className="flex items-center justify-center"
-      style={{ perspective: "1000px" }}
-      aria-hidden
+    <section
+      className="relative overflow-hidden"
+      aria-labelledby="suite-title"
     >
-      <motion.div className="relative w-64 h-64" style={{ transformStyle: "preserve-3d", rotateX, rotateY }}>
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400/30 to-rose-500/30 shadow-2xl" />
-        {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute inset-0"
-            style={{ transformStyle: "preserve-3d" }}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 18 + i * 5, repeat: Infinity, ease: "linear" }}
-          >
-            <motion.span
-              className="absolute top-1/2 left-1/2 block w-3 h-3 rounded-full bg-amber-300"
-              style={{
-                transform: `translate(-50%, -50%) rotate(${i * 60}deg) translateX(110px) rotate(-${i * 60}deg)`,
-              }}
+      {/* Soft elegant backdrop (no heavy colors) */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(80rem 60rem at 10% -20%, rgba(212,175,55,0.10), transparent 55%)," +
+            "radial-gradient(80rem 60rem at 110% 0%, rgba(139,0,0,0.08), transparent 50%)," +
+            "linear-gradient(180deg, #fff 0%, #fff7ef 22%, #ffffff 60%)",
+        }}
+      />
+
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+        {/* Header */}
+        <div className="text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-white/70 px-3 py-1 text-[11px] font-medium text-amber-700 shadow-sm">
+            <span
+              className="inline-block h-1.5 w-1.5 rounded-full"
+              style={{ background: BRAND_GOLD }}
+              aria-hidden
             />
-          </motion.div>
-        ))}
+            Designed for real pastoral work
+          </span>
 
-        <div className="absolute inset-0 grid place-items-center">
-          <UserPlus className="w-16 h-16 text-white/85" />
+          <h2
+            id="suite-title"
+            className="mt-4 font-serif text-slate-900"
+            style={{ fontSize: "clamp(1.9rem, 4.2vw, 3rem)", lineHeight: 1.15 }}
+          >
+            {headline}
+          </h2>
+
+          <p className="mx-auto mt-3 max-w-2xl text-slate-600 text-[15px] sm:text-base">
+            {subline}
+          </p>
         </div>
-      </motion.div>
-    </motion.div>
-  );
-};
 
-/* ---------------------------- Main Section --------------------------- */
-export default function CallToAction({
-  title = "Ready to Join the Family?",
-  blurb = "Register as a new member and become part of our growth story—rooted in faith and community.",
-  registerHref = "#",
-  learnHref = "#",
-  onRegisterClick,
-  onLearnClick,
-  id = "cta",
-}: CTAProps) {
-  const reduce = useReducedMotion();
-
-  const container = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
-  };
-  const item = {
-    hidden: { opacity: 0, y: 18 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 110, damping: 16 } },
-  };
-
-  return (
-    <section id={id} aria-labelledby={`${id}-title`} className="relative py-20 md:py-28 bg-slate-50 dark:bg-slate-950">
-      <BackgroundFX />
-
-      <div className="container mx-auto px-6 relative z-10">
-        <motion.div
-          className="grid lg:grid-cols-2 gap-10 items-center rounded-3xl border border-slate-200/70 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur-xl p-8 md:p-12 shadow-xl"
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.35 }}
-          variants={container}
-        >
-          {/* Copy */}
-          <div className="text-center lg:text-left">
-            <motion.h2
-              id={`${id}-title`}
-              variants={item}
-              className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight"
+        {/* Cards */}
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map(({ icon: Icon, title, text }) => (
+            <article
+              key={title}
+              className="
+                relative rounded-2xl p-[1px]   /* outer gradient border */
+                shadow-[0_12px_40px_-20px_rgba(2,19,71,.20)]
+                transition-transform hover:-translate-y-0.5
+                bg-gradient-to-br
+              "
+              style={{
+                backgroundImage: `linear-gradient(135deg, ${BRAND_GOLD}, rgba(212,175,55,0)),
+                                   linear-gradient(0deg, #ffffff, #ffffff)`,
+              }}
             >
-              {title.split(" ").slice(0, 2).join(" ")}{" "}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--red)] to-amber-500"
-                    style={{ ["--red" as any]: BRAND_RED }}>
-                {title.split(" ").slice(2).join(" ") || "Today"}
-              </span>
-            </motion.h2>
+              <div className="rounded-2xl bg-white p-5">
+                {/* Icon medallion */}
+                <div className="mb-4 inline-grid place-items-center rounded-full p-[2px] shadow"
+                     style={{ background: `conic-gradient(from 220deg, ${BRAND_GOLD}, ${BRAND_RED})` }}
+                     aria-hidden>
+                  <div className="grid h-10 w-10 place-items-center rounded-full bg-white">
+                    <Icon className="h-5 w-5" style={{ color: BRAND_RED }} />
+                  </div>
+                </div>
 
-            <motion.p variants={item} className="mt-4 max-w-lg mx-auto lg:mx-0 text-lg text-slate-700 dark:text-slate-300">
-              {blurb}
-            </motion.p>
+                <h3 className="text-slate-900 font-semibold">{title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{text}</p>
 
-            <motion.div variants={item} className="mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-              {/* If using react-router, swap <a> for <Link to={registerHref}> */}
-              <a
-                href={registerHref}
-                onClick={onRegisterClick}
-                className="group inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400/40"
-                style={{ backgroundColor: BRAND_RED }}
-              >
-                Register Now
-                <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
-              </a>
+                {/* Micro-link */}
+                <div className="mt-3">
+                  <span
+                    className="inline-flex items-center gap-1 text-[13px] font-medium"
+                    style={{ color: BRAND_RED }}
+                  >
+                    Learn more
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
 
-              <a
-                href={learnHref}
-                onClick={onLearnClick}
-                className="group inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold border border-slate-300/70 dark:border-white/15 text-slate-800 dark:text-white bg-white/80 dark:bg-white/10 backdrop-blur-md shadow-lg hover:bg-white dark:hover:bg-white/15 transition focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-400/30"
-              >
-                Learn More
-              </a>
-            </motion.div>
+        {/* Fine divider */}
+        <div className="mt-8 h-px w-full bg-gradient-to-r from-transparent via-amber-200/60 to-transparent" />
+
+        {/* Ribbon CTA */}
+        <div className="mt-8 flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-between sm:gap-4">
+          <div className="text-slate-700 text-sm sm:text-[15px]">
+            Ready to streamline ministry and grow healthy follow-up?
           </div>
 
-          {/* Visual */}
-          <motion.div variants={item} className="flex justify-center">
-            {/* Show animated orb on large screens; static on small or if reduced motion */}
-            <div className="hidden sm:block">
-              <CommunityOrb reduced={!!reduce} />
-            </div>
-            <div className="sm:hidden">
-              <CommunityOrb reduced /> {/* mobile-friendly static */}
-            </div>
-          </motion.div>
-        </motion.div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <a
+              href={primaryHref}
+              className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-[1.05] transition"
+              style={{ background: `linear-gradient(135deg, ${BRAND_RED}, ${BRAND_GOLD})` }}
+            >
+              Book a Walkthrough
+              <ArrowRight className="ml-1.5 h-4 w-4" />
+            </a>
+
+            <a
+              href="/watch-demo"
+              className="inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-slate-800 ring-1 ring-slate-300/80 bg-white hover:bg-slate-50 transition"
+            >
+              Watch Demo
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -52,6 +52,7 @@ export const roleBasedNav = {
         { name: "National Churches", icon: Globe, to: "/dashboard/national-churches" },
         { name: "Districts", icon: MapPin, to: "/dashboard/districts" },
         { name: "Churches", icon: Building2, to: "/dashboard/churches" },
+        
       ]
     },
     { 
@@ -63,6 +64,7 @@ export const roleBasedNav = {
         { name: "Events", icon: Calendar, to: "/dashboard/events" },
         { name: "Reports", icon: FileText, to: "/dashboard/analytics/attendance" },
         { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
+         { name: "Cells", icon: Users2, to: "/dashboard/cells" },
       ]
     },
     { 
@@ -89,6 +91,7 @@ export const roleBasedNav = {
         { name: "Reports", icon: BarChart3, to: "/dashboard/reports" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
          { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
+          { name: "Cells", icon: Users2, to: "/dashboard/cells" },
       ]
     },
 
@@ -111,6 +114,7 @@ export const roleBasedNav = {
         { name: "Churches", icon: Building2, to: "/dashboard/churches" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
          { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
+         { name: "Cells", icon: Users2, to: "/dashboard/cells" },
       ]
     },
 
@@ -135,6 +139,8 @@ export const roleBasedNav = {
         { name: "Attendance", icon: BarChart3, to: "/dashboard/attendance" },
         { name: "Roles", icon: Activity, to: "/dashboard/roles" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
+        { name: "Cells", icon: Users2, to: "/dashboard/cells" },
+
       ]
     },
      { 
@@ -168,6 +174,13 @@ export const roleBasedNav = {
       to: "/dashboard/members",
       type: "link" as const 
     },
+
+      { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
+      { name: "Cells", icon: Users2, to: "/dashboard/cells" },
+
+    {
+      name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const
+    }
   ],
   volunteer: [
     { 
