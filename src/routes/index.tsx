@@ -42,6 +42,8 @@ import CellsListPage from "../api/features/cells/pages/CellsListPage";
 import CellDetailPage from "../api/features/cells/pages/CellDetailPage";
 import CellsDashboardPage from "../api/features/cells/pages/CellsDashboardPage";
 
+import DemoRequestsPage from "../api/features/demo/pages/DemoRequestsPage";
+
 import GetStartedForm from "../components/GetStartedForm";
 
 const router = createBrowserRouter([
@@ -120,6 +122,9 @@ const router = createBrowserRouter([
       { path: "cells", element: <AnimatedPageWrapper><CellsListPage /></AnimatedPageWrapper> },
       { path: "cells/:id", element: <AnimatedPageWrapper><CellDetailPage /></AnimatedPageWrapper> },
       { path: "analytics/cells", element: <AnimatedPageWrapper><CellsDashboardPage /></AnimatedPageWrapper> },
+
+      // Demo Requests
+      { path: "demo-requests", element: <AnimatedPageWrapper><DemoRequestsPage /></AnimatedPageWrapper> },
 
     ],
   },

@@ -21,6 +21,7 @@ import {
   Users2,
   Zap,
 } from "lucide-react";
+import { Children } from "react";
 
 export const roleBasedNav = {
   siteAdmin: [
@@ -65,6 +66,14 @@ export const roleBasedNav = {
         { name: "Cells", icon: Users2, to: "/dashboard/cells" },
         { name: "Cell Analytics", icon: FileText, to: "/dashboard/analytics/cells" },
       ],
+    },
+    {
+      name: "Demo Requests",
+      icon: FileText,
+      type: "group" as const,
+      children: [
+        { name: "View Requests", icon: FileText, to: "/dashboard/demo-requests" },
+      ]
     },
     {
       name: "Account Settings",

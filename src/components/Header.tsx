@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "../api/features/auth/hooks/useAuth";
-import Logo from "../assets/images/logo1.png";
+import Logo from "../assets/images/logo4.png";
 
 const BRAND_PRIMARY = "#021347"; // Deep Blue
 const BRAND_ACCENT = "#8B0000"; // Rich Deep Red
@@ -37,14 +37,25 @@ export default function SiteHeader() {
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-5 py-3">
-        {/* Logo */}
-        <a href="/" className="flex items-center gap-2 group">
-          <img src={Logo} alt="Logo" className="h-10 w-10 rounded bg-white/90" />
-          <span className="hidden sm:block font-extrabold text-white tracking-tight group-hover:text-[#D4AF37] transition">
-            Dominion Connect
-          </span>
-        </a>
-
+      {/* Logo */}
+      <a href="/" className="flex items-center gap-3 group">
+        <img
+          src={Logo}
+          alt="Dominion Connect Logo"
+          className="h-11 w-11 rounded-full bg-white/90 p-[2px] shadow-md group-hover:shadow-[#D4AF37]/40 transition"
+        />
+        <span
+          className="hidden sm:block font-black text-xl tracking-tight text-white
+                    group-hover:text-[#D4AF37] transition-all duration-300
+                    italic drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+          style={{
+            fontFamily: `'Poppins', 'Inter', sans-serif`,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Dominion Connect
+        </span>
+      </a>
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
           {nav.map((l) => (
