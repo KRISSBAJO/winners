@@ -22,18 +22,17 @@ import {
   Zap,
 } from "lucide-react";
 
-
 export const roleBasedNav = {
   siteAdmin: [
-    { 
-      name: "Dashboard", 
-      icon: LayoutDashboard, 
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
       to: "/dashboard",
-      type: "link" as const 
+      type: "link" as const,
     },
-    { 
-      name: "Management", 
-      icon: Users, 
+    {
+      name: "Administration",
+      icon: Users,
       type: "group" as const,
       children: [
         { name: "Users", icon: Users, to: "/dashboard/users" },
@@ -42,96 +41,100 @@ export const roleBasedNav = {
         { name: "Attendance", icon: BarChart3, to: "/dashboard/attendance" },
         { name: "Roles", icon: Activity, to: "/dashboard/roles" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
-      ]
+      ],
     },
-    { 
-      name: "Organization", 
-      icon: Building2, 
+    {
+      name: "Organizational Structure",
+      icon: Building2,
       type: "group" as const,
       children: [
         { name: "National Churches", icon: Globe, to: "/dashboard/national-churches" },
         { name: "Districts", icon: MapPin, to: "/dashboard/districts" },
         { name: "Churches", icon: Building2, to: "/dashboard/churches" },
-        
-      ]
+      ],
     },
-    { 
-      name: "Resources", 
-      icon: Zap, 
+    {
+      name: "Community Resources",
+      icon: Zap,
       type: "group" as const,
       children: [
         { name: "Volunteers", icon: UserPlus, to: "/dashboard/volunteers" },
         { name: "Events", icon: Calendar, to: "/dashboard/events" },
         { name: "Reports", icon: FileText, to: "/dashboard/analytics/attendance" },
         { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
-         { name: "Cells", icon: Users2, to: "/dashboard/cells" },
-      ]
+        { name: "Cells", icon: Users2, to: "/dashboard/cells" },
+        { name: "Cell Analytics", icon: FileText, to: "/dashboard/analytics/cells" },
+      ],
     },
-    { 
-      name: "Settings", 
-      icon: Settings, 
+    {
+      name: "Account Settings",
+      icon: Settings,
       to: "/dashboard/change-password",
-      type: "link" as const 
+      type: "link" as const,
     },
-
   ],
   nationalPastor: [
-    { 
-      name: "Dashboard", 
-      icon: LayoutDashboard, 
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
       to: "/dashboard",
-      type: "link" as const 
+      type: "link" as const,
     },
-    { 
-      name: "Management", 
-      icon: Users, 
+    {
+      name: "Leadership Management",
+      icon: Users,
       type: "group" as const,
       children: [
         { name: "Districts", icon: MapPin, to: "/dashboard/districts" },
         { name: "Reports", icon: BarChart3, to: "/dashboard/reports" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
-         { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
-          { name: "Cells", icon: Users2, to: "/dashboard/cells" },
-      ]
+        { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
+        { name: "Cells", icon: Users2, to: "/dashboard/cells" },
+      ],
     },
-
     {
-      name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const
-    }
+      name: "Account Settings",
+      icon: Settings,
+      to: "/dashboard/change-password",
+      type: "link" as const,
+    },
   ],
   districtPastor: [
-    { 
-      name: "Dashboard", 
-      icon: LayoutDashboard, 
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
       to: "/dashboard",
-      type: "link" as const 
+      type: "link" as const,
     },
-    { 
-      name: "Management", 
-      icon: Users, 
+    {
+      name: "Church Oversight",
+      icon: Users,
       type: "group" as const,
       children: [
         { name: "Churches", icon: Building2, to: "/dashboard/churches" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
-         { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
-         { name: "Cells", icon: Users2, to: "/dashboard/cells" },
-      ]
+        { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
+        { name: "Cells", icon: Users2, to: "/dashboard/cells" },
+        { name: "Cell Analytics", icon: FileText, to: "/dashboard/analytics/cells" },
+      ],
     },
-
     {
-      name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const
-    }
+      name: "Account Settings",
+      icon: Settings,
+      to: "/dashboard/change-password",
+      type: "link" as const,
+    },
   ],
   churchAdmin: [
-    { 
-      name: "Dashboard", 
-      icon: LayoutDashboard, 
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
       to: "/dashboard",
-      type: "link" as const 
+      type: "link" as const,
     },
-     { 
-      name: "Management", 
-      icon: Users, 
+    {
+      name: "Church Management",
+      icon: Users,
       type: "group" as const,
       children: [
         { name: "Users", icon: Users, to: "/dashboard/users" },
@@ -140,63 +143,73 @@ export const roleBasedNav = {
         { name: "Roles", icon: Activity, to: "/dashboard/roles" },
         { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
         { name: "Cells", icon: Users2, to: "/dashboard/cells" },
-
-      ]
+      ],
     },
-     { 
-      name: "Resources", 
-      icon: Zap, 
+    {
+      name: "Community Resources",
+      icon: Zap,
       type: "group" as const,
       children: [
         { name: "Volunteers", icon: UserPlus, to: "/dashboard/volunteers" },
         { name: "Events", icon: Calendar, to: "/dashboard/events" },
         { name: "Reports", icon: FileText, to: "/dashboard/analytics/attendance" },
         { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
-      ]
+        { name: "Cell Analytics", icon: FileText, to: "/dashboard/analytics/cells" },
+      ],
     },
-    { 
-      name: "Settings", 
-      icon: Settings, 
+    {
+      name: "Account Settings",
+      icon: Settings,
       to: "/dashboard/change-password",
-      type: "link" as const 
+      type: "link" as const,
     },
   ],
   pastor: [
-    { 
-      name: "Dashboard", 
-      icon: LayoutDashboard, 
-      to: "/dashboard",
-      type: "link" as const 
-    },
-    { 
-      name: "Members", 
-      icon: Users, 
-      to: "/dashboard/members",
-      type: "link" as const 
-    },
-
-      { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
-      { name: "Cells", icon: Users2, to: "/dashboard/cells" },
-
     {
-      name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const
-    }
+      name: "Dashboard",
+      icon: LayoutDashboard,
+      to: "/dashboard",
+      type: "link" as const,
+    },
+    {
+      name: "Congregation",
+      icon: Users,
+      type: "group" as const,
+      children: [
+        { name: "Members", icon: Users, to: "/dashboard/members" },
+        { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
+        { name: "Cells", icon: Users2, to: "/dashboard/cells" },
+        { name: "Cell Analytics", icon: FileText, to: "/dashboard/analytics/cells" },
+      ],
+    },
+    {
+      name: "Account Settings",
+      icon: Settings,
+      to: "/dashboard/change-password",
+      type: "link" as const,
+    },
   ],
   volunteer: [
-    { 
-      name: "Dashboard", 
-      icon: LayoutDashboard, 
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
       to: "/dashboard",
-      type: "link" as const 
+      type: "link" as const,
     },
     {
-      name: "Pastors", icon: UserPlus, to: "/dashboard/pastors", type: "link" as const
+      name: "Support",
+      icon: Users,
+      type: "group" as const,
+      children: [
+        { name: "Pastors", icon: UserPlus, to: "/dashboard/pastors" },
+        { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
+      ],
     },
-
-     { name: "Follow Up", icon: Bell, to: "/dashboard/follow-up" },
-
     {
-      name: "Settings", icon: Settings, to: "/dashboard/change-password", type: "link" as const
-    }
+      name: "Account Settings",
+      icon: Settings,
+      to: "/dashboard/change-password",
+      type: "link" as const,
+    },
   ],
 };

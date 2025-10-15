@@ -3,21 +3,30 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cellService } from "../services/cellService";
 import type {
-  CreateCellInput, UpdateCellInput, CreateMeetingInput, UpdateMeetingInput, SubmitReportInput
+  CreateCellInput, UpdateCellInput, CreateMeetingInput, UpdateMeetingInput,
+  SubmitReportInput, MeetingsQuery, ReportsQuery, AnalyticsQuery, CellAttendanceReport
 } from "../types/cellTypes";
+
+import { meetingsKey, reportsKey, analyticsKey, normalizeScope } from './keys';
 
 /* Cells */
 export const useCells = (params?: any) =>
   useQuery({ queryKey: ["cells", params], queryFn: () => cellService.listCells(params) });
 
 export const useCell = (id?: string) =>
-  useQuery({ queryKey: ["cell", id], enabled: !!id, queryFn: () => cellService.getCell(id!) });
+  useQuery({ queryKey: ["cell", id], enabled: !!(id && id.trim()), queryFn: () => cellService.getCell(id!) });
 
 export const useCreateCell = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (p: CreateCellInput) => cellService.createCell(p),
-    onSuccess: () => { toast.success("Cell created"); qc.invalidateQueries({ queryKey: ["cells"] }); }
+    onSuccess: (created) => {
+      toast.success("Cell created");
+      qc.invalidateQueries({ queryKey: ["cells"], exact: false });
+      qc.setQueryData<any[]>(["cells", {} as any], (prev) =>
+        Array.isArray(prev) ? [created, ...prev] : prev
+      );
+    },
   });
 };
 
@@ -25,11 +34,11 @@ export const useUpdateCell = (id: string) => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (p: UpdateCellInput) => cellService.updateCell(id, p),
-    onSuccess: () => {
+    onSuccess: (updated) => {
       toast.success("Cell updated");
-      qc.invalidateQueries({ queryKey: ["cells"] });
+      qc.invalidateQueries({ queryKey: ["cells"], exact: false });
       qc.invalidateQueries({ queryKey: ["cell", id] });
-    }
+    },
   });
 };
 
@@ -58,25 +67,16 @@ export const useRemoveMemberFromCell = (id: string) => {
 };
 
 /* Meetings */
-export const useMeetings = (params?: { cellId?: string }) =>
-  useQuery({
-    queryKey: ["cell-meetings", params?.cellId ?? null],
-    queryFn: () => cellService.listMeetings(params),
-    enabled: !!params?.cellId,
-    select: (res: any) => (Array.isArray(res) ? res : res?.items ?? []), // <- always-array
-    refetchOnMount: "always", // <- prevents “empty on first open” surprises
-  });
+export const useMeetings = (params?: MeetingsQuery) => {
+  const scope = normalizeScope(params);
+  const enabled = Boolean(scope.cellId || scope.churchId || scope.districtId || scope.nationalChurchId);
 
-export const useCreateMeeting = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (p: CreateMeetingInput) => cellService.createMeeting(p),
-    onSuccess: (created, vars) => {
-      toast.success("Meeting scheduled");
-      const key = ["cell-meetings", vars.cellId ?? null, vars.churchId ?? null] as const;
-      qc.invalidateQueries({ queryKey: key });
-      qc.setQueryData<any[]>(key, (prev) => (Array.isArray(prev) ? [created, ...prev] : [created]));
-    },
+  return useQuery({
+    queryKey: meetingsKey(params),
+    queryFn:  () => cellService.listMeetings(params),
+    enabled,
+    refetchOnMount: "always",
+    select: (res: any) => (Array.isArray(res) ? res : res?.items ?? []),
   });
 };
 
@@ -86,9 +86,20 @@ export const useUpdateMeeting = (id: string) => {
     mutationFn: (p: UpdateMeetingInput) => cellService.updateMeeting(id, p),
     onSuccess: (_d, vars) => {
       toast.success("Meeting updated");
-      qc.invalidateQueries({
-        queryKey: ["cell-meetings", (vars as any)?.cellId ?? null, (vars as any)?.churchId ?? null],
-      });
+      qc.invalidateQueries({ queryKey: meetingsKey(vars as any) });
+    },
+  });
+};
+
+export const useCreateMeeting = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: CreateMeetingInput) => cellService.createMeeting(p),
+    onSuccess: (created, vars) => {
+      toast.success("Meeting scheduled");
+      const key = meetingsKey(vars as any);
+      qc.setQueryData<any[]>(key, (prev) => (Array.isArray(prev) ? [created, ...prev] : [created]));
+      qc.invalidateQueries({ queryKey: key });
     },
   });
 };
@@ -105,29 +116,78 @@ export const useDeleteMeeting = () => {
 };
 
 /* Reports & Analytics */
-export const useReports = (params?: { cellId?: string; [k: string]: any }) =>
-  useQuery({
-    queryKey: ["cell-reports", params?.cellId ?? null],
-    queryFn: () => cellService.listReports(params),
-    enabled: !!params?.cellId,
-    select: (res: any) => (Array.isArray(res) ? res : res?.items ?? []),
+/* Reports */
+export const useReports = (params?: ReportsQuery) => {
+  const scope = normalizeScope(params);
+  const enabled = Boolean(scope.cellId || scope.churchId || scope.districtId || scope.nationalChurchId);
+
+  return useQuery({
+    queryKey: reportsKey(params),
+    queryFn:  () => cellService.listReports(params),
+    enabled,
     refetchOnMount: "always",
+    select: (res: any) => (Array.isArray(res) ? res : res?.items ?? []),
   });
+};
 
 export const useSubmitReport = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (p: SubmitReportInput) => cellService.submitReport(p),
     onSuccess: (created, vars) => {
-      const key = ["cell-reports", (vars as any)?.cellId ?? null] as const;
-      qc.setQueryData<any[]>(key, (prev) => (Array.isArray(prev) ? [created, ...prev] : [created]));
-      qc.invalidateQueries({ queryKey: key });
+      // update reports list optimistically
+      const rKey = reportsKey(vars as any);
+      qc.setQueryData<any[]>(rKey, (prev) => (Array.isArray(prev) ? [created, ...prev] : [created]));
+      qc.invalidateQueries({ queryKey: rKey });
+
+      // invalidate unreported meetings list so the reported meeting disappears from the picker
+      const mKeyUnreported = meetingsKey({ ...vars, onlyUnreported: true });
+      qc.invalidateQueries({ queryKey: mKeyUnreported });
+
+      // also invalidate the general meetings list for freshness
+      const mKeyAll = meetingsKey({ cellId: (vars as any).cellId, churchId: (vars as any).churchId });
+      qc.invalidateQueries({ queryKey: mKeyAll });
     },
   });
 };
 
-export const useCellAnalytics = (params: { churchId?: string; from?: string; to?: string }) =>
+// NEW: Update an existing report
+export const useUpdateReport = (id: string, scope: { cellId?: string; churchId?: string }) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: Partial<CellAttendanceReport>) => cellService.updateReport(id, p),
+    onSuccess: (updated) => {
+      // Invalidate reports in scope
+      const rKey = reportsKey(scope);
+      qc.invalidateQueries({ queryKey: rKey });
+      // Meetings don't need change here; it's already reported
+      toast.success("Report updated");
+    },
+  });
+};
+
+// NEW: Delete a report
+export const useDeleteReport = (scope: { cellId?: string; churchId?: string }) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => cellService.deleteReport(id),
+    onSuccess: () => {
+      // Invalidate reports in scope
+      const rKey = reportsKey(scope);
+      qc.invalidateQueries({ queryKey: rKey });
+      toast.success("Report deleted");
+    },
+  });
+};
+
+/* Analytics */
+export const useCellAnalytics = (params: AnalyticsQuery) =>
   useQuery({
-    queryKey: ["cell-analytics", params?.churchId ?? null, params?.from ?? null, params?.to ?? null],
-    queryFn: () => cellService.analytics(params),
+    queryKey: analyticsKey(params),
+    queryFn:  () => cellService.analytics(params),
+    enabled: Boolean(
+      (params?.churchId && params.churchId.trim()) ||
+      (params?.districtId && params.districtId.trim()) ||
+      (params?.nationalChurchId && params.nationalChurchId.trim())
+    ),
   });

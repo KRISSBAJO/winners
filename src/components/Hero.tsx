@@ -28,7 +28,7 @@ export default function HeroChristian() {
 
   return (
     <section
-      className="relative min-h-[86vh] flex items-center justify-center text-center overflow-hidden"
+      className="relative min-h-[75vh] flex items-center  text-center overflow-hidden"
       aria-label="Dominion Connect hero"
     >
       {/* BG */}

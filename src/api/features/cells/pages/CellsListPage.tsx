@@ -17,7 +17,7 @@ export default function CellsListPage() {
   // full tri-scope
   const [scope, setScope] = useState<Scope>({});
   const { data: cells = [], isLoading } = useCells({
-    nationalId: scope.nationalId,
+    nationalId: scope.nationalId,      // UI keeps using nationalId
     districtId: scope.districtId,
     churchId: scope.churchId,
   });

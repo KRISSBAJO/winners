@@ -14,6 +14,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
+import { useParams } from "react-router-dom";
 
 const BRAND = "linear-gradient(135deg,#8B0000,#D4AF37)";
 
@@ -22,6 +23,8 @@ type Scope = { nationalId?: string; districtId?: string; churchId?: string };
 export default function CellsDashboardPage() {
   // 🔴 track ALL three ids
   const [scope, setScope] = useState<Scope>({});
+
+  const { id: cellId } = useParams<{ id: string }>();
 
   const [from, setFrom] = useState<string>(() => {
     const d = new Date();
@@ -38,8 +41,6 @@ export default function CellsDashboardPage() {
   });
 
   const { data: reports = [] } = useReports({
-    nationalId: scope.nationalId,
-    districtId: scope.districtId,
     churchId: scope.churchId,
     from,
     to,

@@ -136,10 +136,11 @@ export default function OrgCascader({
       {/* Selects */}
       <div className={`grid ${gridCls} p-3 sm:p-4`}>
         <SelectCard
-          label="National Church"
+          label="National"
           icon={<Globe2 className="w-4 h-4" />}
           loading={nLoading}
           disabled={disabled}
+          
         >
           <NiceSelect
             placeholder="Select national…"
