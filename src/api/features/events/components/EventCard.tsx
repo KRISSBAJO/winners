@@ -25,34 +25,32 @@ export default function EventCard({ item, to }: { item: Event; to?: string }) {
     </div>
   );
 
+  const coverUrl = item.coverImageUrl ?? item.cover?.url ?? "";
+
   return (
     <Link
       to={to || "#"}
       className="group block rounded-2xl overflow-hidden border border-slate-200/70 dark:border-white/10 bg-white/80 dark:bg-slate-900/60 hover:shadow-lg transition-transform hover:-translate-y-0.5"
       aria-label={`Open event ${item.title}`}
     >
-      {/* Media */}
-      <div className="relative">
-        <div className="aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
-          {item.coverImageUrl ? (
-            <img
-              src={item.coverImageUrl}
-              alt={item.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              loading="lazy"
-            />
-          ) : (
-            <div className="h-full w-full grid place-items-center text-slate-400">
-              <CalendarDays className="w-8 h-8 opacity-60" />
-            </div>
-          )}
+        {/* Media */}
+        <div className="relative">
+          <div className="aspect-[16/9] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+            {coverUrl ? (
+              <img
+                src={coverUrl}
+                alt={item.title}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                loading="lazy"
+              />
+            ) : (
+              <div className="h-full w-full grid place-items-center text-slate-400">
+                <CalendarDays className="w-8 h-8 opacity-60" />
+              </div>
+            )}
+          </div>
+          {dateBadge}
         </div>
-
-        {/* Overlay gradient + title on hover for visual pop */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        {dateBadge}
-      </div>
-
       {/* Body */}
       <div className="p-4">
         {/* Chips */}
