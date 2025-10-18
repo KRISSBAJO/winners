@@ -43,6 +43,31 @@ function asList<T = any>(res: any): T[] {
   return [];
 }
 
+function Avatar({ name }: { name: string }) {
+  const initials = (name || "")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(s => s[0]?.toUpperCase())
+    .join("") || "?";
+
+  // deterministic soft color
+  let hash = 0;
+  for (let i = 0; i < initials.length; i++) hash = (hash * 31 + initials.charCodeAt(i)) | 0;
+  const hue = Math.abs(hash) % 360;
+
+  return (
+    <div
+      className="w-8 h-8 rounded-xl grid place-items-center text-[11px] font-semibold text-white shrink-0"
+      style={{ background: `linear-gradient(135deg, hsl(${hue} 70% 45%), hsl(${(hue+25)%360} 70% 35%))` }}
+      aria-hidden
+    >
+      {initials}
+    </div>
+  );
+}
+
+
 /** Lightweight Drawer */
 function Drawer({
   open,
@@ -288,52 +313,104 @@ export default function CellDetailPage() {
         <Card title="Reports Filed" icon={<ClipboardList className="w-4 h-4" />} value={sortedReports.length} />
       </div>
 
-      {/* Members manage */}
-      <div className="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/90 dark:bg-slate-900/70 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold">Members</h3>
-          <div className="flex items-center gap-2">
-            <MemberPicker churchId={cell?.churchId || ""} value={memberPicker} onChange={setMemberPicker} />
-            <button
-              disabled={!memberPicker}
-              onClick={() => setConfirmRemoveMember({ open: false })}
-              className="hidden"
-            />
-            <button
-              disabled={!memberPicker}
-              onClick={async () => {
-                await addMembers.mutateAsync([memberPicker]);
-                setMemberPicker("");
-                toast.success("Member added");
-              }}
-              className="inline-flex items-center gap-2 text-white px-3 py-2 rounded-lg"
-              style={{ background: BRAND }}
-            >
-              <UserPlus className="w-4 h-4" /> Add
-            </button>
+      {/* Members */}
+      <div className="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/90 dark:bg-slate-900/70 p-5">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Members</h3>
+            <span className="inline-flex items-center rounded-full border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-xs text-slate-600 dark:text-slate-300">
+              {(cell as any)?.members?.length ?? 0}
+            </span>
           </div>
+          <p className="hidden md:block text-xs text-slate-500">
+            Add people to this cell and manage them here.
+          </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {(cell as any)?.members?.map((m: any) => (
-            <div key={m._id} className="rounded-xl border px-3 py-2 flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {m.firstName} {m.lastName}
-                </p>
-                <p className="text-xs text-slate-500 truncate">{m.email || "—"}</p>
-              </div>
-              <button
-                onClick={() => setConfirmRemoveMember({ open: true, memberId: m._id })}
-                className="text-xs px-2 py-1 rounded border hover:bg-red-50 text-red-600 border-red-200 inline-flex items-center gap-1"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Remove
-              </button>
+        {/* Body: 2 columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Left: current members list */}
+          <div className="rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/95 dark:bg-slate-900/60">
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/10">
+              <div className="text-sm font-medium text-slate-800 dark:text-slate-200">Current Members</div>
             </div>
-          )) || <p className="text-sm text-slate-500">No members yet</p>}
+
+            <div className="max-h-80 overflow-y-auto p-3 space-y-3">
+              {((cell as any)?.members?.length ?? 0) === 0 ? (
+                <div className="h-40 grid place-items-center text-sm text-slate-500">
+                  No members yet.
+                </div>
+              ) : (
+                (cell as any).members.map((m: any) => (
+                  <div
+                    key={m._id}
+                    className="group rounded-xl border border-slate-200/70 dark:border-white/10 bg-white/90 dark:bg-slate-900/70 px-3 py-2.5 flex items-center gap-3"
+                  >
+                    <Avatar name={`${m.firstName ?? ""} ${m.lastName ?? ""}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                        {(m.firstName || m.lastName) ? `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim() : "(No name)"}
+                      </p>
+                      <p className="text-xs text-slate-500 truncate">{m.email || m.phone || "—"}</p>
+                    </div>
+                    <button
+                      onClick={() => setConfirmRemoveMember({ open: true, memberId: m._id })}
+                      className="text-xs px-2.5 py-1.5 rounded-lg border hover:bg-red-50 text-red-600 border-red-200"
+                      title="Remove from this cell"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Right: picker + add */}
+          <div className="rounded-xl border border-slate-200/60 dark:border-white/10 bg-white/95 dark:bg-slate-900/60">
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+              <div className="text-sm font-medium text-slate-800 dark:text-slate-200">Select Member</div>
+              <span className="text-[10px] uppercase tracking-wide text-slate-400">Search</span>
+            </div>
+
+            <div className="p-4 space-y-3">
+              {/* keep your existing picker component */}
+              <MemberPicker
+                churchId={cell?.churchId || ""}
+                value={memberPicker}
+                onChange={setMemberPicker}
+              />
+
+              <div className="flex items-center justify-end">
+                <button
+                  disabled={!memberPicker}
+                  onClick={async () => {
+                    await addMembers.mutateAsync([memberPicker]);
+                    setMemberPicker("");
+                    toast.success("Member added");
+                  }}
+                  className="inline-flex items-center gap-2 text-white px-4 py-2.5 rounded-xl shadow-md hover:brightness-105 transition disabled:opacity-60"
+                  style={{ background: BRAND }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeWidth="2" d="M15 8a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeWidth="2" d="M19 21a8 8 0 10-14 0" />
+                    <path strokeWidth="2" d="M19 10v6M22 13h-6" />
+                  </svg>
+                  Add
+                </button>
+              </div>
+
+              {/* tiny helper text */}
+              <p className="text-[11px] text-slate-500">
+                Tip: Type at least <span className="font-semibold">2</span> characters to search quickly. Results are streamed as you scroll.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
+
 
       {/* Meetings + list */}
       <div className="rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/90 dark:bg-slate-900/70 p-4">

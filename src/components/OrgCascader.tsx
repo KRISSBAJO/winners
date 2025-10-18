@@ -14,7 +14,9 @@ import {
   useChurchesByDistrict,
 } from "../api/features/org/hooks/useOrg";
 
-type ScopeValue = { nationalId?: string; districtId?: string; churchId?: string };
+/* ---------- Types ---------- */
+export type ScopeValue = { nationalId?: string; districtId?: string; churchId?: string };
+export type Locks = { national?: boolean; district?: boolean; church?: boolean };
 
 type Props = {
   value?: ScopeValue;
@@ -22,6 +24,8 @@ type Props = {
   disabled?: boolean;
   compact?: boolean;
   className?: string;
+  /** lock any level to make it read-only (used for role-based scoping) */
+  locks?: Locks;
 };
 
 export default function OrgCascader({
@@ -30,6 +34,7 @@ export default function OrgCascader({
   disabled,
   compact,
   className = "",
+  locks,
 }: Props) {
   const [nationalId, setNationalId] = useState<string | undefined>(value?.nationalId);
   const [districtId, setDistrictId] = useState<string | undefined>(value?.districtId);
@@ -47,7 +52,7 @@ export default function OrgCascader({
     isError: cError,
   } = useChurchesByDistrict(districtId);
 
-  // Reset cascading selections
+  /* Reset cascade when parents clear (unless locked) */
   useEffect(() => {
     if (!nationalId) {
       setDistrictId(undefined);
@@ -59,14 +64,14 @@ export default function OrgCascader({
     if (!districtId) setChurchId(undefined);
   }, [districtId]);
 
-  // Sync down from parent
+  /* Sync down from parent prop */
   useEffect(() => {
     setNationalId(value?.nationalId);
     setDistrictId(value?.districtId);
     setChurchId(value?.churchId);
   }, [value?.nationalId, value?.districtId, value?.churchId]);
 
-  // Propagate up (stable)
+  /* Propagate up only when changed */
   const lastSent = useRef<ScopeValue>({});
   useEffect(() => {
     const next = { nationalId, districtId, churchId };
@@ -82,11 +87,6 @@ export default function OrgCascader({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nationalId, districtId, churchId]);
 
-  /** Responsive grid:
-   *  - xs: 1 col (stacked cards / accordion spacing)
-   *  - md: 2 cols
-   *  - lg+: 3 cols (classic layout)
-   */
   const gridCls = compact
     ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3"
     : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4";
@@ -102,33 +102,44 @@ export default function OrgCascader({
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-b border-slate-200/60 dark:border-white/10">
         <div className="flex items-center gap-3 min-w-0">
-         
           <div className="min-w-0">
-            <h4 className="text-[10px] sm:text-xs font-semibold text-amber-800 extra-bold dark:text-slate-100 truncate">
+            <h4 className="text-[10px] sm:text-xs font-semibold text-amber-800 dark:text-slate-100 truncate">
               Scope
             </h4>
-            <p className="text-[9px] sm:text-[8px] text-slate-500 dark:text-slate-400 border-b-2 border-amber-400/50">
+            <p className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400">
               Nat'l → Dist → Church
             </p>
           </div>
         </div>
 
-        {/* Selected chips — horizontally scrollable on small screens */}
+        {/* Selected chips */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300/70 dark:scrollbar-thumb-slate-700/60 -mx-1 px-1">
           <ScopeChip
             label=""
             value={nationals.find((n) => n._id === nationalId)?.name}
-            onClear={disabled || nLoading || !nationalId ? undefined : () => setNationalId(undefined)}
+            onClear={
+              disabled || nLoading || !nationalId || locks?.national
+                ? undefined
+                : () => setNationalId(undefined)
+            }
           />
           <ScopeChip
             label=""
             value={districts.find((d) => d._id === districtId)?.name}
-            onClear={disabled || dLoading || !districtId ? undefined : () => setDistrictId(undefined)}
+            onClear={
+              disabled || dLoading || !districtId || locks?.district
+                ? undefined
+                : () => setDistrictId(undefined)
+            }
           />
           <ScopeChip
             label=""
             value={churches.find((c) => c._id === churchId)?.name}
-            onClear={disabled || cLoading || !churchId ? undefined : () => setChurchId(undefined)}
+            onClear={
+              disabled || cLoading || !churchId || locks?.church
+                ? undefined
+                : () => setChurchId(undefined)
+            }
           />
         </div>
       </div>
@@ -139,14 +150,13 @@ export default function OrgCascader({
           label="National"
           icon={<Globe2 className="w-4 h-4" />}
           loading={nLoading}
-          disabled={disabled}
-          
+          disabled={disabled || !!locks?.national}
         >
           <NiceSelect
             placeholder="Select national…"
             value={nationalId || ""}
             onChange={(v) => setNationalId(v || undefined)}
-            disabled={disabled || nLoading}
+            disabled={disabled || nLoading || !!locks?.national}
             options={nationals.map((n) => ({ label: n.name, value: n._id }))}
           />
         </SelectCard>
@@ -155,7 +165,7 @@ export default function OrgCascader({
           label="District"
           icon={<MapPinned className="w-4 h-4" />}
           loading={dLoading}
-          disabled={disabled || !nationalId}
+          disabled={disabled || !nationalId || !!locks?.district}
           hint={!nationalId ? "Choose a national church first" : undefined}
           error={dError ? "Couldn’t load districts" : undefined}
         >
@@ -163,7 +173,7 @@ export default function OrgCascader({
             placeholder={nationalId ? "Select district…" : "Select national first"}
             value={districtId || ""}
             onChange={(v) => setDistrictId(v || undefined)}
-            disabled={disabled || !nationalId || dLoading}
+            disabled={disabled || !nationalId || dLoading || !!locks?.district}
             options={districts.map((d) => ({ label: d.name, value: d._id }))}
           />
         </SelectCard>
@@ -172,7 +182,7 @@ export default function OrgCascader({
           label="Church"
           icon={<ChurchIcon className="w-4 h-4" />}
           loading={cLoading}
-          disabled={disabled || !districtId}
+          disabled={disabled || !districtId || !!locks?.church}
           hint={!districtId ? "Choose a district first" : undefined}
           error={cError ? "Couldn’t load churches" : undefined}
         >
@@ -180,7 +190,7 @@ export default function OrgCascader({
             placeholder={districtId ? "Select church…" : "Select district first"}
             value={churchId || ""}
             onChange={(v) => setChurchId(v || undefined)}
-            disabled={disabled || !districtId || cLoading}
+            disabled={disabled || !districtId || cLoading || !!locks?.church}
             options={churches.map((c) => ({ label: c.name, value: c._id }))}
           />
         </SelectCard>
@@ -267,7 +277,7 @@ function NiceSelect({
         disabled={disabled}
         className={`
           peer w-full rounded-lg border bg-white/95 dark:bg-slate-800/70
-          px-3 pr-10 py-2.5 text-[15px] sm:text-sm text-slate-800 dark:text-slate-900
+          px-3 pr-10 py-2.5 text-[15px] sm:text-sm text-slate-800 dark:text-slate-100
           outline-none ring-2 ring-transparent transition
           focus:ring-amber-400/40 disabled:opacity-60 disabled:cursor-not-allowed
           border-slate-300/70 dark:border-slate-700
@@ -302,7 +312,7 @@ function NiceSelect({
         )}
       </AnimatePresence>
 
-      {/* Floating helper with current value (wraps on tiny screens) */}
+      {/* Selected helper */}
       <AnimatePresence>
         {hasValue && (
           <motion.div

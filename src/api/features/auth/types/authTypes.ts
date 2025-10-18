@@ -46,3 +46,11 @@ export interface RegisterInput {
   password: string;
   role: string;
 }
+
+
+export type DelegatedScope = { nationalChurchId?: string; districtId?: string; churchId?: string };
+
+export interface MePayload extends User {
+  permissions?: string[];
+  delegatedScopes?: DelegatedScope[];
+}

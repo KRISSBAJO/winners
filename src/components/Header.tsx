@@ -4,7 +4,6 @@ import { Menu, X, User, LayoutDashboard, LogOut, ChevronDown } from "lucide-reac
 import { useAuth } from "../api/features/auth/hooks/useAuth";
 import Logo from "../assets/images/logo4.png";
 
-const BRAND_PRIMARY = "#021347"; // Deep Blue
 const BRAND_ACCENT = "#8B0000"; // Rich Deep Red
 const BRAND_GOLD = "#D4AF37";
 const GRADIENT = `linear-gradient(135deg, ${BRAND_ACCENT}, ${BRAND_GOLD})`;
@@ -25,7 +24,7 @@ export default function SiteHeader() {
     { href: "#features", label: "Features" },
     { href: "#ministries", label: "Ministries" },
     { href: "#events", label: "Events" },
-    { href: "#contact", label: "Contact" },
+    { href: "#suite", label: "Suite" },
   ];
 
   return (

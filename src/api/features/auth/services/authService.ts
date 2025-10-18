@@ -7,6 +7,10 @@ import {
   TokensResponse,
 } from "../types/authTypes";
 
+import type { MePayload } from "../types/authTypes";
+
+
+
 export const authService = {
   login: async (data: LoginInput): Promise<AuthResponse> => {
     const res = await apiClient.post("/auth/login", data);
@@ -18,9 +22,9 @@ export const authService = {
     return res.data;
   },
 
-  me: async (): Promise<User> => {
+   me: async (): Promise<MePayload> => {
     const res = await apiClient.get("/auth/me");
-    return res.data;
+    return res.data as MePayload;
   },
 
   refresh: async (refreshToken: string): Promise<TokensResponse> => {

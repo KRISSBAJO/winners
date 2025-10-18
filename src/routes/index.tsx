@@ -45,6 +45,14 @@ import CellsDashboardPage from "../api/features/cells/pages/CellsDashboardPage";
 import DemoRequestsPage from "../api/features/demo/pages/DemoRequestsPage";
 
 import GetStartedForm from "../components/GetStartedForm";
+import ActivityPage from "../api/features/activity/pages/ActivityPage";
+
+import DelegationsPage from "../api/features/delegations/pages/DelegationsPage";
+
+import GroupsDirectory from "../api/features/groups/pages/GroupsDirectory";
+import GroupListPage from "../api/features/groups/pages/GroupListPage";
+import GroupFormPage from "../api/features/groups/pages/GroupFormPage";
+import GroupManagePage from "../api/features/groups/pages/GroupManagePage";
 
 const router = createBrowserRouter([
  
@@ -66,6 +74,7 @@ const router = createBrowserRouter([
 
     { path: "self-register", element: <AnimatedPageWrapper><SelfRegisterPage /></AnimatedPageWrapper> },
     { path: "get-started", element: <AnimatedPageWrapper><GetStartedForm /></AnimatedPageWrapper> },
+    { path: "groups", element: <AnimatedPageWrapper><GroupsDirectory /></AnimatedPageWrapper> },
 
   // Dashboard (protected)
   {
@@ -125,6 +134,18 @@ const router = createBrowserRouter([
 
       // Demo Requests
       { path: "demo-requests", element: <AnimatedPageWrapper><DemoRequestsPage /></AnimatedPageWrapper> },
+
+      // Activity feed
+      { path: "activity", element: <AnimatedPageWrapper><ActivityPage /></AnimatedPageWrapper> },
+
+      // Delegations
+      { path: "delegations", element: <AnimatedPageWrapper><DelegationsPage /></AnimatedPageWrapper> },
+
+      // Groups
+      { path: "admin/groups", element: <AnimatedPageWrapper><GroupListPage /></AnimatedPageWrapper> },
+      { path: "admin/groups/new", element: <AnimatedPageWrapper><GroupFormPage /></AnimatedPageWrapper> },
+      { path: "admin/groups/:id/edit", element: <AnimatedPageWrapper><GroupFormPage /></AnimatedPageWrapper> },
+      { path: "admin/groups/:id/manage", element: <AnimatedPageWrapper><GroupManagePage /></AnimatedPageWrapper> },
 
     ],
   },

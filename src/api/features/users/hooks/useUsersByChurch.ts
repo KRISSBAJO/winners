@@ -1,4 +1,4 @@
-// src/api/features/users/hooks/useUsers.ts
+// src/api/features/users/hooks/useUsersByChurch.ts
 import { useInfiniteQuery } from "@tanstack/react-query";
 import api from "../../../../lib/apiClient";
 import type { User } from "../../auth/types/authTypes";

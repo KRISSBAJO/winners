@@ -9,7 +9,6 @@ import {
   useAttendance, useAttendanceSummary, useAttendanceDaily, useAttendanceWeekly, useUpsertAttendance
 } from "../hooks/useAttendance";
 import AttendanceForm from "../components/AttendanceForm";
-import AttendanceSummary from "../components/AttendanceSummary";
 import AttendanceTable from "../components/AttendanceTable";
 import { DailyChart, WeeklyChart } from "../components/AttendanceCharts";
 import { attendanceService } from "../services/attendanceService";
@@ -17,11 +16,23 @@ import { useNavigate } from "react-router-dom";
 
 const TYPES = ["", "Sunday", "Midweek", "PrayerMeeting", "Vigil", "Conference", "Special", "Other"];
 
+// helpers: coerce possible object → string id / label
+const idOf = (v: any): string =>
+  typeof v === "string" ? v : (v && (v._id || v.id)) ? String(v._id || v.id) : "";
+
+const churchLabel = (v: any): string =>
+  typeof v === "object" && v
+    ? v.name || String(v._id || v.id || "")
+    : typeof v === "string"
+    ? v
+    : "";
+
+
 export default function AttendancePage() {
   const navigate = useNavigate();
   const { user, scope } = useAuthStore();
   const isSiteAdmin = user?.role === "siteAdmin";
-  const defaultChurchId = scope?.churchId || (user as any)?.churchId || "";
+  const defaultChurchId = idOf(scope?.churchId ?? (user as any)?.churchId ?? "");
 
   const [showFormModal, setShowFormModal] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);

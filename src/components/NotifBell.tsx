@@ -1,20 +1,24 @@
+// NotifBell.tsx
 import { Bell, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNotifications, useUnreadCount, useMarkAllRead, useMarkRead } from "../api/features/notifications/hooks";
 import { useNotifStore } from "../realtime/useNotifStore";
 import { Link } from "react-router-dom";
 
 export default function NotifBell() {
-  // these hooks now write to the store via effects only (safe)
-  const { data } = useNotifications();
+  // still run the hooks to hydrate store + unread count
+  useNotifications();
   useUnreadCount();
 
   const unread = useNotifStore((s) => s.unread);
+  const list   = useNotifStore((s) => s.notifications); // ← render from store
   const markAll = useMarkAllRead();
   const markOne = useMarkRead();
 
   const [open, setOpen] = useState(false);
-  const items = data?.items ?? [];
+
+  // optional: keep newest first if needed
+  const items = useMemo(() => list, [list]);
 
   return (
     <div className="relative">
@@ -44,24 +48,28 @@ export default function NotifBell() {
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {items.map((n: any) => (
-              <div key={n._id} className="px-3 py-2 border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                <div className="text-sm font-medium">{n.title}</div>
-                {n.message && <div className="text-xs text-slate-500">{n.message}</div>}
-                <div className="mt-1 flex items-center gap-2">
-                  {n.link && <Link to={n.link} className="text-xs text-amber-700 hover:underline">Open</Link>}
-                  {!n.isRead && (
-                    <button
-                      onClick={() => markOne.mutate(n._id)}
-                      disabled={markOne.isPending}
-                      className="text-xs text-slate-500 hover:underline disabled:opacity-50"
-                    >
-                      Mark read
-                    </button>
-                  )}
+            {items.map((n: any) => {
+              // unified local read flag (server uses isRead; store uses __read)
+              const isRead = n.__read ?? n.isRead ?? false;
+              return (
+                <div key={n._id} className="px-3 py-2 border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <div className="text-sm font-medium">{n.title}</div>
+                  {n.message && <div className="text-xs text-slate-500">{n.message}</div>}
+                  <div className="mt-1 flex items-center gap-2">
+                    {n.link && <Link to={n.link} className="text-xs text-amber-700 hover:underline">Open</Link>}
+                    {!isRead && (
+                      <button
+                        onClick={() => markOne.mutate(n._id)}
+                        disabled={markOne.isPending}
+                        className="text-xs text-slate-500 hover:underline disabled:opacity-50"
+                      >
+                        Mark read
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {items.length === 0 && (
               <div className="px-3 py-6 text-sm text-center text-slate-500">No notifications yet.</div>
             )}

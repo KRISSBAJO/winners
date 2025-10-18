@@ -52,12 +52,14 @@ export default function Sidebar({
   const [hovered, setHovered] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [menuOpen, setMenuOpen] = useState(false);
-  const { clearAuth, user } = useAuthStore();
+   const { clearAuth, user, actingOverride } = useAuthStore(); 
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   const isDesktopCollapsed = collapsed && !hovered;
-  const navItems = roleBasedNav[user?.role || "volunteer"] as NavItem[];
+   const effectiveRole =
+    actingOverride?.roleLike ?? (user?.role || "volunteer");
+  const navItems = roleBasedNav[effectiveRole] as NavItem[];
 
   const toggleGroup = (groupName: string) => setOpenGroups((p) => ({ ...p, [groupName]: !p[groupName] }));
   const handleLogout = () => { clearAuth(); navigate("/login"); };

@@ -24,7 +24,7 @@ export default function Ministries({
   const reduce = useReducedMotion();
 
   return (
-    <section
+    <section  id="ministries"
       aria-labelledby="ministries-title"
       className="relative overflow-hidden bg-gradient-to-br from-white via-amber-50/40 to-red-50 dark:from-slate-950 dark:via-red-950/10 dark:to-amber-950/20 py-20 sm:py-28"
     >

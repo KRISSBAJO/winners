@@ -78,7 +78,8 @@ export default function Events() {
   const events = data?.items ?? [];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-red-950/20 py-20 sm:py-28">
+    <section id="events"
+      className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-red-950/20 py-20 sm:py-28">
       {/* bg accents */}
       <div aria-hidden className="absolute inset-0 -z-10">
         <div className="absolute top-1/4 left-[8%] w-64 sm:w-80 h-64 sm:h-80 bg-red-100/25 dark:bg-red-900/10 rounded-full blur-3xl" />

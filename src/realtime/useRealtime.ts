@@ -15,24 +15,31 @@ export function useRealtime() {
     if (!accessToken) return;
     const s = connectSocket(accessToken);
 
-    s.on("notification:new", (n: { title: string; message: string }) => {
-      const doc: NotificationDoc = {
-        _id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())),
-        kind: "system",
-        scope: "user",
-        title: n.title,
-        message: n.message,
-        link: undefined,
-        actorId: undefined,
-        actorName: undefined,
-        scopeRef: undefined,
-        recipients: [],
-        readBy: [],
-        createdAt: new Date().toISOString(),
-      };
-      addNotification(doc);
-      toast(n.title, { description: n.message });
-    });
+    // useRealtime.ts
+      s.on("notification:new", (n: { title: string; message: string }) => {
+        const doc: NotificationDoc = {
+          _id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())),
+          kind: "system",
+          scope: "user",
+          title: n.title,
+          message: n.message,
+          link: undefined,
+          actorId: undefined,
+          actorName: undefined,
+          scopeRef: undefined,
+          recipients: [],
+          readBy: [],
+          createdAt: new Date().toISOString(),
+          // add unified read flags
+          // @ts-ignore
+          __read: false,
+          // @ts-ignore
+          isRead: false,
+        };
+        addNotification(doc);
+        toast(n.title, { description: n.message });
+      });
+
 
     s.on("activity:new", (a: { id: string; description: string }) => {
       addActivity(a);

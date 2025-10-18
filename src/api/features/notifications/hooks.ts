@@ -6,7 +6,7 @@ import { useNotifStore } from "../../../realtime/useNotifStore";
 
 /* List */
 export const useNotifications = () => {
-  const setNotifications = useNotifStore((s) => s.setNotifications); // stable selector
+  const setNotifications = useNotifStore((s) => s.setNotifications);
 
   const q = useQuery<Paginated<NotificationDoc>>({
     queryKey: ["notifs", "list"],
@@ -17,9 +17,15 @@ export const useNotifications = () => {
     staleTime: 30_000,
   });
 
-  // ✅ hydrate local inbox ONLY in an effect
   useEffect(() => {
-    if (q.data?.items) setNotifications(q.data.items);
+    if (q.data?.items) {
+      // map server isRead -> local __read, keep ordering
+      const normalized = q.data.items.map((n: any) => ({
+        ...n,
+        __read: typeof n.isRead === "boolean" ? n.isRead : n.__read, // prefer server truth
+      }));
+      setNotifications(normalized);
+    }
   }, [q.data?.items, setNotifications]);
 
   return q;

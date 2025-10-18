@@ -7,6 +7,7 @@ import CallToAction from "./components/CallToAction";
 import Ministries from "./components/Ministries";
 import Events from "./components/Events";
 import HomeFellowship from "./components/HomeFellowship";
+import StoreFront from "./components/StoreFront";
 
 export default function App() {
   return (
