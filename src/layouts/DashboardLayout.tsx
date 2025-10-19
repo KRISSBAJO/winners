@@ -14,7 +14,7 @@ export default function DashboardLayout() {
   const toggleMobile = () => setMobileOpen(!mobileOpen);
 
   return (
-    <div className="flex h-dvh bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white overflow-hidden">
+    <div className="flex h-dvh bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-hidden">
       <Sidebar
         collapsed={collapsed}
         setCollapsed={setCollapsed}

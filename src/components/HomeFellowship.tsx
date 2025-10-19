@@ -115,11 +115,10 @@ const MOCK: Array<
 ];
 
 /**
- * NEW logic (exactly what you asked):
- * - If API total >= 6 → show first 6 API; showMore = (totalApi > 6).
- * - If 1..5 API → show all API first, then fill the rest up to 6 with mocks.
- * - If 0 API → show 6 mocks.
- * At any time, removing/adding API items rebalances automatically.
+ * Keep your original fill rule:
+ * - If API total >= 6 → first 6 API; showMore = totalApi > 6
+ * - If 1..5 API → all API + mocks to reach 6
+ * - If 0 API → 6 mocks
  */
 function selectHomeItems(apiItems: GroupPublic[], totalApi: number) {
   const toApiCard = (g: GroupPublic) => ({
@@ -146,15 +145,63 @@ function selectHomeItems(apiItems: GroupPublic[], totalApi: number) {
   return { items: MOCK.slice(0, 6), showMore: false, moreCount: 0 };
 }
 
+/** Rotation that ONLY runs when there are ≥ 6 API groups. */
+function useRotatingApiWindow(fullApi: any[], enabled: boolean, step = 3, intervalMs = 30000) {
+  const [offset, setOffset] = React.useState(0);
+  const shuffledRef = React.useRef<any[]>([]);
+
+  React.useEffect(() => {
+    if (!enabled) { shuffledRef.current = []; setOffset(0); return; }
+    const copy = [...fullApi];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    shuffledRef.current = copy;
+    setOffset(0);
+  }, [enabled, fullApi]);
+
+  React.useEffect(() => {
+    if (!enabled || shuffledRef.current.length < 6) return;
+    const id = setInterval(() => setOffset(o => (o + step) % shuffledRef.current.length), intervalMs);
+    return () => clearInterval(id);
+  }, [enabled, intervalMs, step]);
+
+  return React.useMemo(() => {
+    if (!enabled || shuffledRef.current.length < 6) return [];
+    const arr = shuffledRef.current;
+    return Array.from({ length: 6 }, (_, i) => arr[(offset + i) % arr.length]);
+  }, [enabled, offset]);
+}
+
 export default function HomeFellowshipCompact() {
   const { data } = usePublicGroups({ page: 1, limit: 24, sort: "name" });
   const apiItems = data?.items ?? [];
   const totalApi = data?.total ?? 0;
 
-  const { items, showMore, moreCount } = useMemo(
+  // Your original 6-card selection (API first, then fill with mocks)
+  const { items: baseItems, showMore, moreCount } = useMemo(
     () => selectHomeItems(apiItems, totalApi),
     [apiItems, totalApi]
   );
+
+  // Build pure-API array (for rotation only)
+  const fullApi = useMemo(
+    () => (data?.items ?? []).map(g => ({
+      ...g,
+      _source: "api" as const,
+      tag: g.type ? g.type.charAt(0).toUpperCase() + g.type.slice(1) : undefined,
+      location: g.publicArea,
+    })),
+    [data?.items]
+  );
+
+  // Rotate ONLY when there are ≥ 6 API results overall
+  const canRotate = totalApi >= 6;
+  const rotatingSix = useRotatingApiWindow(fullApi, canRotate, /*step*/ 3, /*interval*/ 30000);
+
+  // Final items: rotate when possible, otherwise keep your original mixed set
+  const items = (canRotate && rotatingSix.length === 6) ? rotatingSix : baseItems;
 
   // Only ask for next times for API-backed cards currently displayed
   const apiIds = useMemo(

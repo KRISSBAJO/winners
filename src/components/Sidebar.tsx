@@ -91,8 +91,8 @@ export default function Sidebar({
         animate={{ width: sidebarWidth }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={`fixed lg:relative z-50 h-screen
-          bg-gradient-to-b from-white/95 via-white/80 to-slate-100/70
-          dark:from-slate-900/95 dark:via-slate-800/80 dark:to-slate-700/70
+          bg-white
+
           backdrop-blur-3xl border-r border-gradient-to-b from-slate-200/50 to-slate-300/30
           dark:from-slate-700/50 dark:to-slate-600/30 flex flex-col
           shadow-2xl shadow-slate-200/50 dark:shadow-slate-900/50

@@ -53,6 +53,9 @@ import GroupsDirectory from "../api/features/groups/pages/GroupsDirectory";
 import GroupListPage from "../api/features/groups/pages/GroupListPage";
 import GroupFormPage from "../api/features/groups/pages/GroupFormPage";
 import GroupManagePage from "../api/features/groups/pages/GroupManagePage";
+import GroupsExplorePage from "../components/GroupsExplorePage";
+
+import MinistryDetailPage from "../components/MinistryDetailPage";
 
 const router = createBrowserRouter([
  
@@ -75,7 +78,8 @@ const router = createBrowserRouter([
     { path: "self-register", element: <AnimatedPageWrapper><SelfRegisterPage /></AnimatedPageWrapper> },
     { path: "get-started", element: <AnimatedPageWrapper><GetStartedForm /></AnimatedPageWrapper> },
     { path: "groups", element: <AnimatedPageWrapper><GroupsDirectory /></AnimatedPageWrapper> },
-
+    { path: "groups/explore", element: <AnimatedPageWrapper><GroupsExplorePage /></AnimatedPageWrapper> },
+    { path: "ministries/:slug", element: <AnimatedPageWrapper><MinistryDetailPage /></AnimatedPageWrapper> },
   // Dashboard (protected)
   {
     path: "/dashboard",
